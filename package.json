@@ -1,0 +1,55 @@
+{
+  "name": "gridgeo",
+  "version": "0.0.1",
+  "description": "xxx",
+  "main": "src/index.js",
+  "module": "src/index.js",
+  "jsdelivr": "dist/index.min.js",
+  "unpkg": "dist/index.min.js",
+  "exports": {
+    "umd": "./dist/index.min.js",
+    "default": "./src/index.js"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "scripts": {
+    "build": "rollup --config",
+    "prepare": "npm run build",
+    "docs": "jsdoc --configure jsdoc.json --verbose"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/neocarto/gridgeo.git"
+  },
+  "keywords": [
+    "xxx",
+    "xxx",
+    "d3xxx"
+  ],
+  "author": "Nicolas Lambert",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/neocarto/gridgeo/issues"
+  },
+  "homepage": "https://github.com/neocarto/gridgeo#readme",
+  "dependencies": {
+    "docs": "^0.3.2-canary.0",
+    "documentation": "^14.0.3",
+    "rollup": "^4.10.0"
+  },
+  "devDependencies": {
+    "@jood/jsdoc-theme": "^0.1.14",
+    "@rollup/plugin-babel": "^6.0.4",
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.3",
+    "clean-jsdoc-theme": "^4.2.17",
+    "docdash": "^2.0.1",
+    "jsdoc": "^4.0.2",
+    "jsdoc-to-markdown": "^8.0.0",
+    "modern-jsdoc-template": "^1.0.0",
+    "postman-jsdoc-theme": "^0.0.3"
+  }
+}
