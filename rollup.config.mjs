@@ -9,7 +9,7 @@ export default {
   output: {
     format: "umd",
     file: "dist/index.min.js",
-    name: "gridgeo",
+    name: "geogrid",
   },
   plugins: [
     commonjs(), // prise en charge de require
