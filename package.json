@@ -24,9 +24,10 @@
     "url": "git+https://github.com/neocarto/geogrid.git"
   },
   "keywords": [
-    "xxx",
-    "xxx",
-    "d3xxx"
+    "grid",
+    "regular mesh",
+    "maps",
+    "geo"
   ],
   "author": "Nicolas Lambert",
   "license": "MIT",
