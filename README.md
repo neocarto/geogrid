@@ -1,0 +1,3 @@
+A js library to handle regular grids for cartography
+
+Work in progress...
