@@ -2,7 +2,7 @@ import { range } from "d3-array";
 const d3 = Object.assign({}, { range });
 
 /**
- * @function make.diamond
+ * @function diamond
  * @description The `make.diamond()` function allows to create a diamond geoJSON grid in SVG coordinates.
  * @property {number} [step = 50] - step of the grid
  * @property {number} [width = 1000] - width of the grid

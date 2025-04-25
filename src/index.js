@@ -1,21 +1,9 @@
-import { square } from "./grid/square.js";
-import { triangle } from "./grid/triangle.js";
-import { dot } from "./grid/dot.js";
-import { random } from "./grid/random.js";
-import { diamond } from "./grid/diamond.js";
-import { hexbin } from "./grid/hexbin.js";
-import { h3 } from "./grid/h3.js";
-
-export let make = {
-  square,
-  triangle,
-  dot,
-  diamond,
-  random,
-  hexbin,
-  h3,
-};
-
-import { pointstogrid } from "./operator/pointstogrid.js";
-import { polygonstogrid } from "./operator/polygonstogrid.js";
-export let op = { pointstogrid, polygonstogrid };
+export { square } from "./grid/square.js";
+export { triangle } from "./grid/triangle.js";
+export { dot } from "./grid/dot.js";
+export { random } from "./grid/random.js";
+export { diamond } from "./grid/diamond.js";
+export { hexbin } from "./grid/hexbin.js";
+export { h3 } from "./grid/h3.js";
+export { pointstogrid } from "./operator/pointstogrid.js";
+export { polygonstogrid } from "./operator/polygonstogrid.js";

@@ -1,12 +1,15 @@
-import { range } from "d3-array";
-const d3 = Object.assign({}, { range });
+import { createSteppedArray } from "../helpers/createSteppedArray.js";
 
 /**
- * @function make.dot
- * @description The `make.dot()` function allows to create a geoJSON vith regular dots in SVG coordinates.
- * @property {number} [step = 50] - step of the grid
- * @property {number} [width = 1000] - width of the grid
- * @property {number} [height = 500] - height of the grid
+ * @function dot
+ * @summary Compute a dot grid.
+ * @description The `square()` function allows to create a square grid in SVG coordinates.
+ * @param {number} [step = 50] - step of the grid.
+ * @param {array} [width = [0,1000, 500, 0]] - Bounding box [top, right, bottom, left].
+ * @param {boolean} [overflow = false] - Depending on the step you choose, the grid may be smaller than the bounding box. With overflow = true, the grid is allowed to exceed the bounding box.
+ * @returns {object} - A GeoJSON FeatureCollection
+ * @example
+ * geogrid.dot({step:30})
  */
 export function dot({ step = 30, width = 1000, height = 500 } = {}) {
   // build grid
