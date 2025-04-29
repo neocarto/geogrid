@@ -8,7 +8,7 @@ import { createSteppedArray } from "../helpers/createSteppedArray.js";
  * @param {array} [start = [0,0]] - Positioning coordinates [x,y].
  * @param {number} [width = 1000] - Width of the grid
  * @param {number} [height = 500] - Height of the grid
- * @param {boolean} [overflow = false] - Depending on the step you choose, the grid may be smaller than the bounding box defined by with and height. With overflow = true, the grid is allowed to exceed the bounding box.
+ * @param {boolean} [overflow = true] - Depending on the step you choose, the grid may be smaller than the bounding box defined by with and height. With overflow = true, the grid is allowed to exceed the bounding box.
  * @returns {object} - A GeoJSON FeatureCollection
  * @example
  * geogrid.square({step:30})
@@ -18,20 +18,15 @@ export function square({
   width = 1000,
   height = 500,
   step = 50,
-  overflow = false,
+  overflow = true,
 } = {}) {
   // build grid
-  let y = createSteppedArray(
-    start[1] + step / 2,
-    start[1] + height - step / 2,
-    step,
-    true
-  );
-  let x = createSteppedArray(
-    start[0] + step / 2,
-    start[0] + width - step / 2,
-    step
-  );
+
+  let x0 = overflow ? start[0] : start[0] + step / 2;
+  let y0 = overflow ? start[1] : start[1] + step / 2;
+
+  let y = createSteppedArray(y0, start[1] + height - step / 2, step, true);
+  let x = createSteppedArray(x0, start[0] + width - step / 2, step);
 
   if (overflow) {
     if (y[0] + step / 2 < start[1] + height) {
