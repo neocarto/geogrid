@@ -26,9 +26,11 @@ geo = require("geogrid");
 
 **Planar grids**
 
+- [**`dot`**](global.html#dot) - The function create a dot grid.
+- [**`hexbin`**](global.html#hexbin) - The function create a hexbin grid.
+- [**`random`**](global.html#random) - The function create a random grid.
 - [**`square`**](global.html#square) - The function create a square grid.
-- [**`xxx`**]() - xxx
-- [**`xxx`**]() - xxx
+- [**`triangle`**](global.html#triangle) - The function create a triangle grid.
 
 **Globe grids**
 

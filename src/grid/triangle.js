@@ -41,7 +41,7 @@ export function triangle({
 
   // build grid
   let x0 = overflow ? start[0] - step / 2 : start[0];
-  let y0 = overflow ? start[1] - h / 2 : start[1] + h;
+  let y0 = overflow ? start[1] - h / 2 : start[1];
   let xend = start[0] + width + h;
   let yend = x0 + height + h;
 
@@ -91,7 +91,8 @@ export function triangle({
         if (
           d[0] <= x0 + width - step / 2 &&
           d[0] > x0 &&
-          d[1] <= y0 + height - h
+          d[1] <= y0 + height &&
+          d[1] > y0
         ) {
           triangles.push(triangletop(d, step));
         }
@@ -101,7 +102,7 @@ export function triangle({
         if (
           d[0] <= x0 + width - step / 2 &&
           d[0] > x0 &&
-          d[1] <= y0 + height - h * 2
+          d[1] <= y0 + height - h
         ) {
           triangles.push(trianglebottom(d, step));
         }

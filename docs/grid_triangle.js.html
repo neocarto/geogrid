@@ -26,17 +26,28 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import { range, max } from "d3-array";
-const d3 = Object.assign({}, { range, max });
+            <pre class="prettyprint source linenums"><code>import { createSteppedArray } from "../helpers/createSteppedArray.js";
 
 /**
- * @function make.triangle
- * @description The `make.triangle()` function allows to create a triangle geoJSON grid in SVG coordinates.
- * @property {number} [step = 50] - step of the grid
- * @property {number} [width = 1000] - width of the grid
- * @property {number} [height = 500] - height of the grid
+ * @function triangle
+ * @summary Compute a triangle grid.
+ * @description The `triangle()` function allows to create a triangle grid in SVG coordinates.
+ * @param {number} [step = 50] - Step of the grid.
+ * @param {array} [start = [0,0]] - Positioning coordinates [x,y].
+ * @param {number} [width = 1000] - Width of the grid
+ * @param {number} [height = 500] - Height of the grid
+ * @param {boolean} [overflow = true] - Depending on the step you choose, the grid may be smaller than the bounding box defined by with and height. With overflow = true, the grid is allowed to exceed the bounding box.
+ * @returns {object} - A GeoJSON FeatureCollection
+ * @example
+ * geogrid.triangle({step:30})
  */
-export function triangle({ step = 50, width = 1000, height = 500 } = {}) {
+export function triangle({
+  start = [0, 0],
+  width = 1000,
+  height = 500,
+  step = 50,
+  overflow = true,
+} = {}) {
   let triangletop = (p, size) => {
     let h = (Math.sqrt(3) / 2) * size;
     let p1 = [p[0] + size / 2, p[1]];
@@ -57,12 +68,18 @@ export function triangle({ step = 50, width = 1000, height = 500 } = {}) {
   let h = (Math.sqrt(3) / 2) * step;
 
   // build grid
+  let x0 = overflow ? start[0] - step / 2 : start[0];
+  let y0 = overflow ? start[1] - h / 2 : start[1];
+  let xend = start[0] + width + h;
+  let yend = x0 + height + h;
 
-  let y = d3.range(0, height + size, h).reverse();
+  let x = createSteppedArray(x0, xend, step);
+  let y = createSteppedArray(y0, yend, h, true);
+
   if (y.length % 2) {
-    y.unshift(d3.max(y) + h);
+    y.unshift(y[0] + h);
   }
-  let x = d3.range(0, width + size, step);
+
   let grid = x.map((x, i) => y.map((y) => [x, y])).flat();
   grid = grid.map((d, i) => {
     return i % 2 == 1 ? [d[0] + step / 2, d[1]] : d;
@@ -71,20 +88,71 @@ export function triangle({ step = 50, width = 1000, height = 500 } = {}) {
   let nb = grid.length;
   grid = grid.concat(grid);
 
-  // build object
-  let result = grid.map((d, i) => {
-    return {
-      type: "Feature",
-      geometry: {
-        type: "Polygon",
-        coordinates:
-          i &lt; nb ? [triangletop(d, step)] : [trianglebottom(d, step)],
-      },
-      properties: {
-        index: i,
-      },
-    };
+  // Build triangles
+  let triangles = [];
+  grid.forEach((d, i) => {
+    if (overflow) {
+      // triangle top
+      if (i &lt; nb) {
+        if (
+          d[0] &lt;= x0 + width + step &amp;&amp;
+          d[0] > x0 &amp;&amp;
+          d[1] >= y0 + step / 2 &amp;&amp;
+          d[1] &lt;= start[1] + height + h
+        ) {
+          triangles.push(triangletop(d, step));
+        }
+      }
+      //triangle bottom
+      else {
+        if (
+          d[0] &lt;= x0 + width + step &amp;&amp;
+          d[0] > x0 &amp;&amp;
+          d[1] &lt;= start[1] + height
+        ) {
+          triangles.push(trianglebottom(d, step));
+        }
+      }
+    } else {
+      // triangle top
+      if (i &lt; nb) {
+        if (
+          d[0] &lt;= x0 + width - step / 2 &amp;&amp;
+          d[0] > x0 &amp;&amp;
+          d[1] &lt;= y0 + height &amp;&amp;
+          d[1] > y0
+        ) {
+          triangles.push(triangletop(d, step));
+        }
+      }
+      //triangle bottom
+      else {
+        if (
+          d[0] &lt;= x0 + width - step / 2 &amp;&amp;
+          d[0] > x0 &amp;&amp;
+          d[1] &lt;= y0 + height - h
+        ) {
+          triangles.push(trianglebottom(d, step));
+        }
+      }
+    }
   });
+
+  // Build geojson
+
+  let result = triangles.map((d, i) => ({
+    type: "Feature",
+    geometry: {
+      type: "Polygon",
+      //coordinates: d
+      coordinates: [d],
+    },
+    properties: {
+      index: i,
+      coords: d,
+    },
+  }));
+
   return {
     type: "FeatureCollection",
     grid: "triangle",
@@ -102,13 +170,13 @@ export function triangle({ step = 50, width = 1000, height = 500 } = {}) {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#diamond">diamond</a></li><li><a href="global.html#dot">dot</a></li><li><a href="global.html#square">square</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#diamond">diamond</a></li><li><a href="global.html#dot">dot</a></li><li><a href="global.html#hexbin">hexbin</a></li><li><a href="global.html#square">square</a></li><li><a href="global.html#triangle">triangle</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Fri Apr 25 2025 13:15:31 GMT+0200 (Central European Summer Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Wed Apr 30 2025 15:52:33 GMT+0200 (Central European Summer Time)
 </footer>
 
 <script> prettyPrint(); </script>

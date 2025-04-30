@@ -6,7 +6,7 @@ import {
 } from "h3-js";
 
 import { featureToH3Set, h3SetToFeatureCollection } from "geojson2h3";
-import { rewind } from "geotoolbox";
+import { rewind as rrewind } from "geotoolbox";
 
 /**
  * @function make.h3
