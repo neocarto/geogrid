@@ -50,7 +50,8 @@
     "geotoolbox": "^3.0.3",
     "h3-js": "^4.1.0",
     "rbush": "^4.0.1",
-    "rollup": "^4.10.0"
+    "rollup": "^4.10.0",
+    "webdggrid": "^1.0.5"
   },
   "devDependencies": {
     "@jood/jsdoc-theme": "^0.1.14",
