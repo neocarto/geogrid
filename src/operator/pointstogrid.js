@@ -1,4 +1,5 @@
 import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
+import { geoProject } from "d3-geo-projection";
 
 /**
  * @function op.pointstogrid
@@ -6,19 +7,25 @@ import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
  * @property {object} [points] - dots geoJSON
  * @property {object} [grid] - grid
  * @property {string} [var = undefined] - field (absolute quantitative data only)
+ * @property {function} [projecton = null] -
  */
 export function pointstogrid(
   opts = {
     points: undefined,
     grid: undefined,
     var: undefined,
+    projection: null,
   }
 ) {
   let polys = opts.grid.features;
-  let points = opts.dots.features;
+  let points = opts.points.features;
   let count = new Array(polys.length).fill(0);
   let nb = points.length;
   let test = new Array(nb).fill(true);
+
+  // projection
+  // Manage projection
+
   polys.forEach((p, i) => {
     points.forEach((d, j) => {
       if (test[j]) {
@@ -34,7 +41,7 @@ export function pointstogrid(
     });
   });
 
-  // Rebuild grid
+  //Rebuild grid
   let output = polys
     .map((d, i) => ({
       type: d.type,

@@ -19,6 +19,7 @@ export function polygonstogrid(
     var: undefined,
   }
 ) {
+  const t0 = performance.now();
   let grid = opts.grid.features;
   let polys = opts.polygons.features;
   let gridbyindex = new Map(grid.map((d, i) => [i, d]));
@@ -53,7 +54,8 @@ export function polygonstogrid(
     });
     return sum == 0 ? undefined : sum;
   }
-
+  const t1 = performance.now();
+  console.log(`Temps d'exécution: ${(t1 - t0).toFixed(2)} ms`);
   return {
     type: "FeatureCollection",
     features: datagrid.map((d) => {
