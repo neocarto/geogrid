@@ -1,5 +1,9 @@
+import RBush from "rbush";
+import { bbox } from "@turf/bbox";
 import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
-import { geoProject } from "d3-geo-projection";
+import { geoPath } from "d3-geo";
+import { groups } from "d3-array";
+const d3 = Object.assign({}, { geoPath, groups });
 
 /**
  * @function op.pointstogrid
@@ -7,42 +11,54 @@ import { geoProject } from "d3-geo-projection";
  * @property {object} [points] - dots geoJSON
  * @property {object} [grid] - grid
  * @property {string} [var = undefined] - field (absolute quantitative data only)
- * @property {function} [projecton = null] -
  */
 export function pointstogrid(
   opts = {
     points: undefined,
     grid: undefined,
     var: undefined,
-    projection: null,
   }
 ) {
-  let polys = opts.grid.features;
-  let points = opts.points.features;
-  let count = new Array(polys.length).fill(0);
-  let nb = points.length;
-  let test = new Array(nb).fill(true);
+  const t0 = performance.now();
 
-  // projection
-  // Manage projection
+  const polys = opts.grid.features;
+  const points = opts.points.features;
+  const count = new Array(polys.length).fill(0);
 
-  polys.forEach((p, i) => {
-    points.forEach((d, j) => {
-      if (test[j]) {
-        if (booleanPointInPolygon(d, p)) {
-          if (opts.var == undefined) {
-            count[i] = count[i] + 1;
-          } else {
-            count[i] = count[i] + parseFloat(d.properties[opts.var]);
-          }
-          test[j] = false;
-        }
-      }
+  // ---- 1. Construire l’index spatial des polygones ----
+  const tree = new RBush();
+  const items = polys.map((p, i) => {
+    const [minX, minY, maxX, maxY] = bbox(p);
+    return { minX, minY, maxX, maxY, i };
+  });
+  tree.load(items);
+
+  // ---- 2. Boucle sur les points ----
+  points.forEach((pt) => {
+    const [x, y] = pt.geometry.coordinates;
+
+    // Trouver les polygones candidats dont la bbox contient le point
+    const candidates = tree.search({
+      minX: x,
+      minY: y,
+      maxX: x,
+      maxY: y,
     });
+
+    // Tester seulement ces candidats
+    for (const cand of candidates) {
+      const poly = polys[cand.i];
+      if (booleanPointInPolygon(pt, poly)) {
+        const value =
+          opts.var === undefined ? 1 : parseFloat(pt.properties[opts.var]) || 0;
+        count[cand.i] += value;
+        break; // Si un point ne doit appartenir qu'à une cellule
+      }
+    }
   });
 
-  //Rebuild grid
-  let output = polys
+  // ---- 3. Reconstituer la grille ----
+  const output = polys
     .map((d, i) => ({
       type: d.type,
       geometry: d.geometry,
@@ -50,7 +66,7 @@ export function pointstogrid(
     }))
     .filter((d) => d.properties.count !== 0);
 
-  //const endTime = performance.now();
-  //const elapsedTime = endTime - startTime;
+  const t1 = performance.now();
+  console.log(`Temps d'exécution: ${(t1 - t0).toFixed(2)} ms`);
   return { type: "FeatureCollection", features: output };
 }
