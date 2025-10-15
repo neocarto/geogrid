@@ -7,4 +7,4 @@ export { hexbin } from "./grid/hexbin.js";
 export { h3 } from "./grid/h3.js";
 export { pointstogrid } from "./operator/pointstogrid.js";
 export { polygonstogrid } from "./operator/polygonstogrid.js";
-export { webggrid } from "./grid/webggrid.js";
+//export { webggrid } from "./grid/webggrid.js";
