@@ -6,7 +6,7 @@ import { groups } from "d3-array";
 const d3 = Object.assign({}, { geoPath, groups });
 
 /**
- * @function op.pointstogrid
+ * @function pointstogrid
  * @description The `op.pointstogrid()` function allows to count dots in polygons (e.g. grid cells)
  * @property {object} [points] - dots geoJSON
  * @property {object} [grid] - grid

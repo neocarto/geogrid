@@ -8,7 +8,7 @@ import { groups } from "d3-array";
 const d3 = Object.assign({}, { geoPath, groups });
 
 /**
- * @function op.pointstogrid
+ * @function pointstogrid
  * @description Count points (optionally weighted) within polygons (e.g. grid cells)
  * @property {object} [points] - points geoJSON
  * @property {object} [grid] - grid geoJSON
