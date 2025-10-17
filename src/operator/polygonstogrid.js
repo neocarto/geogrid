@@ -10,7 +10,7 @@ const d3 = Object.assign({}, { geoPath, groups });
 /**
  * @function pointstogrid
  * @description Count points (optionally weighted) within polygons (e.g. grid cells)
- * @property {object} [points] - points geoJSON
+ * @property {object} [polygons] - points geoJSON
  * @property {object} [grid] - grid geoJSON
  * @property {string} [var = undefined] - field for point weight
  */
