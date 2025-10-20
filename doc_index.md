@@ -1,12 +1,11 @@
-![banner](https://raw.githubusercontent.com/neocarto/geogrid/d3b8112f2ca0ca635c011162afb60797f738a77f/img/banner.png)
-
 ![npm](https://img.shields.io/npm/v/geogrid) ![jsdeliver](https://img.shields.io/jsdelivr/npm/hw/geogrid) ![license](https://img.shields.io/badge/license-MIT-success) ![code size](https://img.shields.io/github/languages/code-size/neocarto/geogrid)
+
+![banner](https://raw.githubusercontent.com/neocarto/geogrid/d3b8112f2ca0ca635c011162afb60797f738a77f/img/banner.png)
 
 # `geogrid`
 
 ### `geogrid` is a JavaScript library that allows you to create regular grids with various patterns on a flat plane or on the globe. In addition, it provides geoprocessing functions to transfer GeoJSON data (points, lines, or polygons) onto these grids.
 
-See the full documentation at: [https://neocarto.github.io/geogrid/](https://neocarto.github.io/geogrid/)
 
 ### ➡️ Installation
 
@@ -78,17 +77,7 @@ geogrid = require("geogrid");
 
 ### ➡️ Usage
 
-```js
-import * as geogrid from "https://cdn.jsdelivr.net/npm/geogrid@0.0.5/+esm";
-async function main() {
-   const cities = await json("./cities.json");
-
-
-}
-main()
-```
-
-See 
+Find an example [here](https://neocarto.github.io/geogrid/examples/example.html).
 
 ### ➡️ Issues / Feature Requests
 
