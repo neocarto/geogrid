@@ -15,7 +15,7 @@
   <script type="module">
     import * as geoviz from "https://cdn.jsdelivr.net/npm/geoviz@0.8.2/+esm";
     import { json } from "https://cdn.jsdelivr.net/npm/d3-fetch@3/+esm";
-    import * as geogrid from "https://cdn.jsdelivr.net/npm/geogrid@0.0.4/+esm";
+    import * as geogrid from "https://cdn.jsdelivr.net/npm/geogrid@0.0.5/+esm";
 
     async function main() {
       const world = await json("./world.json");
@@ -24,48 +24,56 @@
       let svg = geoviz.create({
         domain: world,
         projection: "NaturalEarth1",
-        margin: 20,
         zoomable: true,
+        width: 1000,
       });
 
       let dots = geogrid.project(cities, { projection: svg.projection });
 
       const slider = document.getElementById("resolution");
 
-      //   function drawGrid(step) {
-      //     let g = geogrid.hexbin({
-      //       step: step,
-      //       overflow: true,
-      //       width: svg.width,
-      //       height: svg.height,
-      //     });
+      function drawGrid(step) {
+        let g = geogrid.hexbin({
+          step: step,
+          overflow: true,
+          width: svg.width,
+          height: svg.height,
+        });
 
-      //     const test = grid.pointstogrid({
-      //       points: dots,
-      //       grid: g,
-      //       var: "population",
-      //     });
-      //     svg.plot({
-      //       id: "mygrid",
-      //       type: "choro",
-      //       data: test,
-      //       var: "sum",
-      //       coords: "svg",
-      //       tip: true,
-      //       fill: "red",
-      //       strokOpacity: 0.2,
-      //       k: 10,
-      //     });
-      //   }
+        const test = geogrid.pointstogrid({
+          points: dots,
+          grid: g,
+          var: "population",
+        });
+
+        svg.plot({
+          id: "mygrid",
+          type: "choro",
+          data: test,
+          var: "count",
+          coords: "svg",
+          tip: true,
+          opacity: 0.8,
+          legend: false,
+        });
+      }
 
       svg.path({ datum: world, fill: "#CCC" });
+      drawGrid(parseInt(slider.value));
+      svg.circle({
+        data: cities,
+        stroke: "#000",
+        strokeWidth: 0.3,
+        fill: "red",
+        r: 1.5,
+      });
 
       // Interactivité
       slider.addEventListener("input", function () {
         document.getElementById(
           "labelsize"
         ).innerHTML = `Resolution (${slider.value})`;
-        //drawGrid(slider.value);
+        drawGrid(parseInt(slider.value));
       });
 
       document.querySelector("#map").append(svg.render());

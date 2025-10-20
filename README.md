@@ -1,9 +1,3 @@
-A js library to handle regular grids for cartography
+![banner](img/banner.png)
 
-Work in progress...
-
-See: 
-- A5: https://observablehq.com/@fil/a5-dggs : https://observablehq.com/d/1fd2c4cb7203e866
-- h3: https://observablehq.com/@fil/h3-oddities
-- https://github.com/LandscapeGeoinformatics/awesome-discrete-global-grid-systems 
-- DGGRID https://github.com/am2222/webDggrid
+### `geogrid` is a JavaScript library that allows you to create regular grids with various patterns on a flat plane or on the globe. In addition, it provides geoprocessing functions to transfer GeoJSON data (points, lines, or polygons) onto these grids.

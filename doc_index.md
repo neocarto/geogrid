@@ -2,6 +2,8 @@
 
 # `geogrid`
 
+![banner](img/banner.png)
+
 ### `geogrid` is a JavaScript library that allows you to create regular grids with various patterns on a flat plane or on the globe. In addition, it provides geoprocessing functions to transfer GeoJSON data (points, lines, or polygons) onto these grids.
 
 ### ➡️ Installation
@@ -74,7 +76,17 @@ geogrid = require("geogrid");
 
 ### ➡️ Usage
 
-See examples: 
+```js
+import * as geogrid from "https://cdn.jsdelivr.net/npm/geogrid@0.0.5/+esm";
+async function main() {
+   const cities = await json("./cities.json");
+
+
+}
+main()
+```
+
+See 
 
 ### ➡️ Issues / Feature Requests
 
