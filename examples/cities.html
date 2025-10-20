@@ -15,7 +15,7 @@
   <script type="module">
     import * as geoviz from "https://cdn.jsdelivr.net/npm/geoviz@0.8.2/+esm";
     import { json } from "https://cdn.jsdelivr.net/npm/d3-fetch@3/+esm";
-    import { hexbin, pointstogrid } from "../src/index.js";
+    import * as geogrid from "https://cdn.jsdelivr.net/npm/geogrid@0.0.4/+esm";
 
     async function main() {
       const world = await json("./world.json");
@@ -28,13 +28,13 @@
         zoomable: true,
       });
 
-      //let dots = geogrid.project(cities, { projection: svg.projection });
+      let dots = geogrid.project(cities, { projection: svg.projection });
 
       const slider = document.getElementById("resolution");
 
-      //   function drawGrid() {
-      //     let g = grid.hexbin({
-      //       step: range1,
+      //   function drawGrid(step) {
+      //     let g = geogrid.hexbin({
+      //       step: step,
       //       overflow: true,
       //       width: svg.width,
       //       height: svg.height,
@@ -65,7 +65,7 @@
         document.getElementById(
           "labelsize"
         ).innerHTML = `Resolution (${slider.value})`;
-        //drawGrid();
+        //drawGrid(slider.value);
       });
 
       document.querySelector("#map").append(svg.render());

@@ -25,18 +25,22 @@ npm install geogrid
 Then import in your JavaScript/TypeScript project:
 
 ``` js
-// Import ES Modules
 import * as geogrid from "geogrid";
 ```
 
 Or
 
 ``` js
-// Import ES Modules
 import { pointstogrid, polygonstogrid, linestogrid } from "geogrid";
 ```
 
-<b>3. In Observable Notebooks</b>
+<b>3. ES Modules</b>
+
+``` js
+import * as geogrid from "https://cdn.jsdelivr.net/npm/geogrid@0.0.4/+esm";
+```
+
+<b>4. In Observable Notebooks</b>
 
 ``` js
 geogrid = require("geogrid");
