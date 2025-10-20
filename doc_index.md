@@ -77,7 +77,7 @@ geogrid = require("geogrid");
 
 ### ➡️ Usage
 
-Find an example [here](https://neocarto.github.io/geogrid/examples/example.html).
+Find an example [here](https://github.com/neocarto/geogrid/blob/main/examples/example.html).
 
 ### ➡️ Issues / Feature Requests
 
