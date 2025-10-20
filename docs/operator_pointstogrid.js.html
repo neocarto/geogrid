@@ -26,54 +26,118 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
+            <pre class="prettyprint source linenums"><code>import RBush from "rbush";
+import { bbox } from "@turf/bbox";
+import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
+import { min, max, median, mean, sum } from "d3-array";
 
 /**
- * @function op.pointstogrid
- * @description The `op.pointstogrid()` function allows to count dots in polygons (e.g. grid cells)
- * @property {object} [points] - dots geoJSON
- * @property {object} [grid] - grid
- * @property {string} [var = undefined] - field (absolute quantitative data only)
+ * @function pointstogrid
+ * @description Assigns points to grid cells and computes statistics per cell.
+ * @param {object} opts
+ * @property {object} [points] - GeoJSON points
+ * @property {object} [grid] - GeoJSON grid (polygons)
+ * @property {string} [var] - Field for weighting points (optional)
+ * @property {boolean} [values=false] - Include array of raw values/IDs
+ * @property {boolean} [sum=true] - Compute sum
+ * @property {boolean} [median=false] - Compute median
+ * @property {boolean} [min=false] - Compute minimum
+ * @property {boolean} [max=false] - Compute maximum
+ * @property {boolean} [mean=false] - Compute mean
  */
-export function pointstogrid(
-  opts = {
-    points: undefined,
-    grid: undefined,
-    var: undefined,
-  }
-) {
-  let polys = opts.grid.features;
-  let points = opts.dots.features;
-  let count = new Array(polys.length).fill(0);
-  let nb = points.length;
-  let test = new Array(nb).fill(true);
-  polys.forEach((p, i) => {
-    points.forEach((d, j) => {
-      if (test[j]) {
-        if (booleanPointInPolygon(d, p)) {
-          if (opts.var == undefined) {
-            count[i] = count[i] + 1;
-          } else {
-            count[i] = count[i] + parseFloat(d.properties[opts.var]);
-          }
-          test[j] = false;
-        }
-      }
-    });
+export function pointstogrid(opts = {}) {
+  const {
+    points,
+    grid,
+    var: varField,
+    values: includeValues = false,
+    sum: calcSum = true,
+    median: calcMedian = false,
+    min: calcMin = false,
+    max: calcMax = false,
+    mean: calcMean = false,
+  } = opts;
+
+  const t0 = performance.now();
+  const gridFeatures = grid.features;
+  const pointFeatures = points.features;
+  const hasVar = varField !== undefined &amp;&amp; varField !== null;
+
+  const gridbyindex = new Map(gridFeatures.map((d, i) => [i, d]));
+
+  // ---- 1. Spatial index for polygons ----
+  const tree = new RBush();
+  const items = gridFeatures.map((g, i) => {
+    const [minX, minY, maxX, maxY] = bbox(g);
+    return { minX, minY, maxX, maxY, i };
+  });
+  tree.load(items);
+
+  // ---- 2. Prepare stats storage per cell ----
+  const gridStats = new Map();
+  gridFeatures.forEach((g, i) => {
+    gridStats.set(i, { countSet: new Set(), valuesList: [], numericList: [] });
   });
 
-  // Rebuild grid
-  let output = polys
-    .map((d, i) => ({
-      type: d.type,
-      geometry: d.geometry,
-      properties: { ...d.properties, count: count[i] },
-    }))
-    .filter((d) => d.properties.count !== 0);
+  // ---- 3. Loop over points ----
+  pointFeatures.forEach((pt, i) => {
+    const x = pt.geometry.coordinates[0];
+    const y = pt.geometry.coordinates[1];
 
-  //const endTime = performance.now();
-  //const elapsedTime = endTime - startTime;
-  return { type: "FeatureCollection", features: output };
+    const candidates = tree.search({ minX: x, minY: y, maxX: x, maxY: y });
+
+    for (const cand of candidates) {
+      const poly = gridbyindex.get(cand.i);
+      if (!booleanPointInPolygon(pt, poly)) continue;
+
+      const stats = gridStats.get(cand.i);
+      stats.countSet.add(i);
+
+      const val = hasVar ? pt.properties[varField] : 1;
+
+      if (includeValues)
+        stats.valuesList.push(hasVar ? pt.properties[varField] : i);
+      if (hasVar) stats.numericList.push(parseFloat(val) || 0);
+      break; // point counted once per cell
+    }
+  });
+
+  // ---- 4. Build final GeoJSON ----
+  const result = {
+    type: "FeatureCollection",
+    features: gridFeatures
+      .map((g, i) => {
+        const stats = gridStats.get(i);
+        const numericValues = stats.numericList;
+        const values = stats.valuesList;
+        const count = stats.countSet.size;
+
+        if (count === 0) return null;
+
+        const cellProps = { count };
+
+        if (hasVar &amp;&amp; numericValues.length > 0) {
+          if (calcSum) cellProps.sum = sum(numericValues);
+          if (calcMean) cellProps.mean = mean(numericValues);
+          if (calcMedian) cellProps.median = median(numericValues);
+          if (calcMin) cellProps.min = min(numericValues);
+          if (calcMax) cellProps.max = max(numericValues);
+        }
+
+        if (includeValues) cellProps.values = values;
+
+        return {
+          type: g.type,
+          properties: { ...g.properties, ...cellProps },
+          geometry: g.geometry,
+        };
+      })
+      .filter((f) => f !== null),
+  };
+
+  const t1 = performance.now();
+  console.log(`Execution time: ${(t1 - t0).toFixed(2)} ms`);
+  return result;
 }
 </code></pre>
         </article>
@@ -85,13 +149,13 @@ export function pointstogrid(
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#diamond">diamond</a></li><li><a href="global.html#dot">dot</a></li><li><a href="global.html#hexbin">hexbin</a></li><li><a href="global.html#square">square</a></li><li><a href="global.html#triangle">triangle</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#diamond">diamond</a></li><li><a href="global.html#dot">dot</a></li><li><a href="global.html#h3">h3</a></li><li><a href="global.html#hexbin">hexbin</a></li><li><a href="global.html#linestogrid">linestogrid</a></li><li><a href="global.html#pointstogrid">pointstogrid</a></li><li><a href="global.html#polygonstogrid">polygonstogrid</a></li><li><a href="global.html#project">project</a></li><li><a href="global.html#square">square</a></li><li><a href="global.html#triangle">triangle</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Wed Apr 30 2025 15:52:33 GMT+0200 (Central European Summer Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Mon Oct 20 2025 12:15:12 GMT+0200 (Central European Summer Time)
 </footer>
 
 <script> prettyPrint(); </script>

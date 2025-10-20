@@ -1,0 +1,76 @@
+<html>
+  <div>
+    <input
+      type="range"
+      id="resolution"
+      name="resolution"
+      min="10"
+      max="100"
+      value="50"
+    />
+    <label for="resolution" id="labelsize">Resolution (50)</label>
+  </div>
+  <div id="map"></div>
+
+  <script type="module">
+    import * as geoviz from "https://cdn.jsdelivr.net/npm/geoviz@0.8.2/+esm";
+    import { json } from "https://cdn.jsdelivr.net/npm/d3-fetch@3/+esm";
+    import { hexbin, pointstogrid } from "../src/index.js";
+
+    async function main() {
+      const world = await json("./world.json");
+      const cities = await json("./cities.json");
+
+      let svg = geoviz.create({
+        domain: world,
+        projection: "NaturalEarth1",
+        margin: 20,
+        zoomable: true,
+      });
+
+      //let dots = geogrid.project(cities, { projection: svg.projection });
+
+      const slider = document.getElementById("resolution");
+
+      //   function drawGrid() {
+      //     let g = grid.hexbin({
+      //       step: range1,
+      //       overflow: true,
+      //       width: svg.width,
+      //       height: svg.height,
+      //     });
+
+      //     const test = grid.pointstogrid({
+      //       points: dots,
+      //       grid: g,
+      //       var: "population",
+      //     });
+      //     svg.plot({
+      //       id: "mygrid",
+      //       type: "choro",
+      //       data: test,
+      //       var: "sum",
+      //       coords: "svg",
+      //       tip: true,
+      //       fill: "red",
+      //       strokOpacity: 0.2,
+      //       k: 10,
+      //     });
+      //   }
+
+      svg.path({ datum: world, fill: "#CCC" });
+
+      // Interactivité
+      slider.addEventListener("input", function () {
+        document.getElementById(
+          "labelsize"
+        ).innerHTML = `Resolution (${slider.value})`;
+        //drawGrid();
+      });
+
+      document.querySelector("#map").append(svg.render());
+    }
+
+    main();
+  </script>
+</html>

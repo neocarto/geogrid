@@ -45,48 +45,56 @@
     <section>
         <article><p><img src="https://img.shields.io/npm/v/geogrid" alt="npm"> <img src="https://img.shields.io/jsdelivr/npm/hw/geogrid" alt="jsdeliver"> <img src="https://img.shields.io/badge/license-MIT-success" alt="license"> <img src="https://img.shields.io/github/languages/code-size/neocarto/geogrid" alt="code size"></p>
 <h1><code>geogrid</code></h1>
+<h3><code>geogrid</code> is a JavaScript library that allows you to create regular grids with various patterns on a flat plane or on the globe. In addition, it provides geoprocessing functions to transfer GeoJSON data (points, lines, or polygons) onto these grids.</h3>
 <h3>➡️ Installation</h3>
-<ul>
-<li>CDN</li>
-</ul>
+<p><b>1. Via CDN</b></p>
+<p>Include directly in your HTML:</p>
 <pre class="prettyprint source lang-html"><code>&lt;script src=&quot;https://cdn.jsdelivr.net/npm/geogrid&quot; charset=&quot;utf-8&quot;>&lt;/script>
 </code></pre>
-<ul>
-<li>npm</li>
-</ul>
+<p><b>2. Via npm</b></p>
+<p>Install with npm:</p>
 <pre class="prettyprint source"><code>npm install geogrid
 </code></pre>
-<ul>
-<li>Observable notebooks</li>
-</ul>
-<pre class="prettyprint source lang-js"><code>geo = require(&quot;geogrid&quot;);
+<p>Then import in your JavaScript/TypeScript project:</p>
+<pre class="prettyprint source lang-js"><code>// Import ES Modules
+import * as geogrid from &quot;geogrid&quot;;
 </code></pre>
-<h3>➡️ Usage</h3>
+<p>Or</p>
+<pre class="prettyprint source lang-js"><code>// Import ES Modules
+import { pointstogrid, polygonstogrid, linestogrid } from &quot;geogrid&quot;;
+</code></pre>
+<p><b>3. In Observable Notebooks</b></p>
+<pre class="prettyprint source lang-js"><code>geogrid = require(&quot;geogrid&quot;);
+</code></pre>
+<h3>➡️ Functions</h3>
 <p><strong>Planar grids</strong></p>
 <ul>
-<li><a href="global.html#dot"><strong><code>dot</code></strong></a> - The function create a dot grid.</li>
-<li><a href="global.html#hexbin"><strong><code>hexbin</code></strong></a> - The function create a hexbin grid.</li>
+<li><a href="global.html#dot"><strong><code>dot</code></strong></a> - The function create a regular dot grid.</li>
+<li><a href="global.html#hexbin"><strong><code>hexbin</code></strong></a> - The function create a regular hexbin grid.</li>
 <li><a href="global.html#random"><strong><code>random</code></strong></a> - The function create a random grid.</li>
-<li><a href="global.html#square"><strong><code>square</code></strong></a> - The function create a square grid.</li>
-<li><a href="global.html#triangle"><strong><code>triangle</code></strong></a> - The function create a triangle grid.</li>
+<li><a href="global.html#square"><strong><code>square</code></strong></a> - The function create a regular square grid.</li>
+<li><a href="global.html#triangle"><strong><code>triangle</code></strong></a> - The function create a regular triangle grid.</li>
 </ul>
 <p><strong>Globe grids</strong></p>
 <ul>
-<li><a href=""><strong><code>xxx</code></strong></a> - xxx</li>
-<li><a href=""><strong><code>xxx</code></strong></a> - xxx</li>
-<li><a href=""><strong><code>xxx</code></strong></a> - xxx</li>
+<li><a href="global.html#h3"><strong><code>h3</code></strong></a> - The function create a <a href="https://github.com/uber/h3-js">h3-js</a> global grid.</li>
 </ul>
 <p><strong>Operators</strong></p>
 <ul>
-<li><a href=""><strong><code>xxx</code></strong></a> - xxx</li>
-<li><a href=""><strong><code>xxx</code></strong></a> - xxx</li>
-<li><a href=""><strong><code>xxx</code></strong></a> - xxx</li>
+<li><a href="global.html#pointstogrid"><strong><code>pointstogrid</code></strong></a> - Assigns points to grid cells and computes statistics per cell</li>
+<li><a href="global.html#linesstogrid"><strong><code>linesstogrid</code></strong></a> - Assigns lines to a grid and computes statistics per cell</li>
+<li><a href="global.html#polygonstogrid"><strong><code>polygonstogrid</code></strong></a> - Assign polygons to a grid and compute statistics per cell</li>
 </ul>
-<h3>🚧 Work in progress 🚧</h3>
+<p><em>N.B.: All geometries must be in the same projection.</em></p>
+<p><strong>Helpers</strong></p>
 <ul>
-<li>xxx</li>
+<li><a href="global.html#project"><strong><code>project</code></strong></a> - Allows to project GeoJSON geometries.</li>
 </ul>
-<p>Other ideas? =&gt; <a href="https://github.com/riatelab/geogrid/issues">issues</a></p></article>
+<h3>➡️ Usage</h3>
+<p>See examples:</p>
+<h3>➡️ Issues / Feature Requests</h3>
+<p>Other ideas? =&gt; <a href="https://github.com/riatelab/geogrid/issues">issues</a></p>
+<p>See also <a href="https://github.com/LandscapeGeoinformatics/awesome-discrete-global-grid-systems">https://github.com/LandscapeGeoinformatics/awesome-discrete-global-grid-systems</a> &amp; <a href="https://github.com/am2222/webDggrid">https://github.com/am2222/webDggrid</a>.</p></article>
     </section>
 
 
@@ -97,13 +105,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#diamond">diamond</a></li><li><a href="global.html#dot">dot</a></li><li><a href="global.html#hexbin">hexbin</a></li><li><a href="global.html#square">square</a></li><li><a href="global.html#triangle">triangle</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#diamond">diamond</a></li><li><a href="global.html#dot">dot</a></li><li><a href="global.html#h3">h3</a></li><li><a href="global.html#hexbin">hexbin</a></li><li><a href="global.html#linestogrid">linestogrid</a></li><li><a href="global.html#pointstogrid">pointstogrid</a></li><li><a href="global.html#polygonstogrid">polygonstogrid</a></li><li><a href="global.html#project">project</a></li><li><a href="global.html#square">square</a></li><li><a href="global.html#triangle">triangle</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Wed Apr 30 2025 15:52:33 GMT+0200 (Central European Summer Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Mon Oct 20 2025 12:15:12 GMT+0200 (Central European Summer Time)
 </footer>
 
 <script> prettyPrint(); </script>
