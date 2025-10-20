@@ -36,10 +36,15 @@
   },
   "homepage": "https://github.com/neocarto/geogrid#readme",
   "dependencies": {
+    "@turf/area": "^7.2.0",
     "@turf/bbox": "^7.2.0",
+    "@turf/boolean-intersects": "^7.2.0",
     "@turf/boolean-point-in-polygon": "^7.1.0",
+    "@turf/boolean-within": "^7.2.0",
     "@turf/helpers": "^7.1.0",
     "@turf/intersect": "^7.1.0",
+    "@turf/length": "^7.2.0",
+    "@turf/line-split": "^7.2.0",
     "d3-array": "^3.2.4",
     "d3-delaunay": "^6.0.4",
     "d3-geo": "^3.1.1",
@@ -47,11 +52,9 @@
     "docs": "^0.3.2-canary.0",
     "documentation": "^14.0.3",
     "geojson2h3": "^1.2.0",
-    "geotoolbox": "^3.0.3",
     "h3-js": "^4.1.0",
     "rbush": "^4.0.1",
-    "rollup": "^4.10.0",
-    "webdggrid": "^1.0.5"
+    "rollup": "^4.10.0"
   },
   "devDependencies": {
     "@jood/jsdoc-theme": "^0.1.14",

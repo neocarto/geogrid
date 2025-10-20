@@ -1,90 +1,126 @@
 import { featureCollection } from "@turf/helpers";
 import { bbox } from "@turf/bbox";
 import { intersect } from "@turf/intersect";
+import area from "@turf/area";
 import RBush from "rbush";
-import { geoPath } from "d3-geo";
-import { groups } from "d3-array";
-
-const d3 = Object.assign({}, { geoPath, groups });
+import { min, max, median, mean, sum } from "d3-array";
 
 /**
- * @function pointstogrid
- * @description Count points (optionally weighted) within polygons (e.g. grid cells)
- * @property {object} [polygons] - points geoJSON
- * @property {object} [grid] - grid geoJSON
- * @property {string} [var = undefined] - field for point weight
+ * @function polygonstogrid
+ * @description Assign polygons to a grid and compute statistics per cell.
+ *              Optimized and removes cells with count = 0
+ * @param {object} opts
+ * @property {object} [grid] - GeoJSON grid
+ * @property {object} [polygons] - GeoJSON polygons to assign
+ * @property {string} [var] - Field for weighting (optional)
+ * @property {boolean} [values=false] - Include array of raw values
+ * @property {boolean} [sum=true] - Compute sum
+ * @property {boolean} [median=false] - Compute median
+ * @property {boolean} [min=false] - Compute minimum
+ * @property {boolean} [max=false] - Compute maximum
+ * @property {boolean} [mean=false] - Compute mean
  */
-export function polygonstogrid(
-  opts = { grid: undefined, polygons: undefined, var: undefined }
-) {
+export function polygonstogrid(opts = {}) {
+  const {
+    grid,
+    polygons,
+    var: varField,
+    values: includeValues = false,
+    sum: calcSum = true,
+    median: calcMedian = false,
+    min: calcMin = false,
+    max: calcMax = false,
+    mean: calcMean = false,
+  } = opts;
+
   const t0 = performance.now();
 
-  const grid = opts.grid.features;
-  const polys = opts.polygons.features;
-  const gridbyindex = new Map(grid.map((d, i) => [i, d]));
+  const gridFeatures = grid.features;
+  const polys = polygons.features;
+  const hasVar = varField !== undefined && varField !== null;
 
-  // ---- 1. Créer l’index spatial RBush ----
+  const gridbyindex = new Map(gridFeatures.map((d, i) => [i, d]));
+
+  // ---- 1. Spatial index RBush ----
   const tree = new RBush();
-  const items = grid.map((g, i) => {
+  const items = gridFeatures.map((g, i) => {
     const [minX, minY, maxX, maxY] = bbox(g);
     return { minX, minY, maxX, maxY, i };
   });
   tree.load(items);
 
-  const arr = [];
-  const path = d3.geoPath();
+  // ---- 2. Prepare stats storage per cell ----
+  const gridStats = new Map();
+  gridFeatures.forEach((g, i) => {
+    gridStats.set(i, { countSet: new Set(), valuesList: [], numericList: [] });
+  });
 
-  // ---- 2. Boucle sur les polygones ----
+  // ---- 3. Loop over polygons ----
   polys.forEach((p, i) => {
-    const area = path.area(p);
-    const [minX, minY, maxX, maxY] = bbox(p);
+    const polygonArea = area(p);
+    const val = hasVar ? parseFloat(p.properties?.[varField]) || 0 : 1;
 
-    // 3. Chercher uniquement les cellules qui peuvent intersecter
+    const [minX, minY, maxX, maxY] = bbox(p);
     const candidates = tree.search({ minX, minY, maxX, maxY });
 
-    // 4. Tester seulement les candidats
     for (const cand of candidates) {
       const g = gridbyindex.get(cand.i);
       const f = intersect(featureCollection([p, g]));
-      if (f) {
-        const areapiece = path.area(f);
-        arr.push([i, cand.i, areapiece / area]);
+      if (!f) continue;
+
+      const areapiece = area(f);
+      const fraction = areapiece / polygonArea;
+
+      const stats = gridStats.get(cand.i);
+      stats.countSet.add(i);
+
+      if (includeValues) {
+        stats.valuesList.push(hasVar ? p.properties[varField] : 1);
+      }
+
+      if (hasVar) {
+        stats.numericList.push(val * fraction);
       }
     }
   });
 
-  // ---- 5. Calcul des valeurs ----
-  const accessor = new Map(
-    polys.map((d, i) => [
-      i,
-      opts.var ? parseFloat(d.properties[opts.var]) || 0 : 1,
-    ])
-  );
-
-  const datagrid = d3.groups(arr, (d) => d[1]);
-
-  function getsum(cell) {
-    let sum = 0;
-    cell[1].forEach((d) => {
-      sum += accessor.get(d[0]) * d[2];
-    });
-    return sum === 0 ? undefined : sum;
-  }
-
-  // ---- 6. Assemblage du résultat ----
+  // ---- 4. Build final GeoJSON ----
   const result = {
     type: "FeatureCollection",
-    features: datagrid.map(([key, vals]) => {
-      const tmp = gridbyindex.get(key);
-      return {
-        type: tmp.type,
-        properties: { ...tmp.properties, sum: getsum([key, vals]) },
-        geometry: tmp.geometry,
-      };
-    }),
+    features: gridFeatures
+      .map((g, i) => {
+        const stats = gridStats.get(i);
+        const numericValues = stats.numericList;
+        const values = stats.valuesList;
+        const count = stats.countSet.size;
+
+        if (count === 0) return null;
+
+        const cellProps = { count };
+
+        if (hasVar && numericValues.length > 0) {
+          if (calcSum) cellProps.sum = sum(numericValues);
+          if (calcMean) cellProps.mean = mean(numericValues);
+          if (calcMedian) cellProps.median = median(numericValues);
+          if (calcMin) cellProps.min = min(numericValues);
+          if (calcMax) cellProps.max = max(numericValues);
+        }
+
+        if (includeValues) {
+          cellProps.values = values;
+        }
+
+        return {
+          type: g.type,
+          properties: { ...g.properties, ...cellProps },
+          geometry: g.geometry,
+        };
+      })
+      .filter((f) => f !== null),
   };
 
   const t1 = performance.now();
-  console.log(`Temps d'exécution: ${(t1 - t0).toFixed(2)} ms`);
+  console.log(`Optimized execution time: ${(t1 - t0).toFixed(2)} ms`);
+
   return result;
 }
