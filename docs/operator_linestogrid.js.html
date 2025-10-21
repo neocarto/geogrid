@@ -28,132 +28,111 @@
         <article>
             <pre class="prettyprint source linenums"><code>import { bbox } from "@turf/bbox";
 import { lineSplit } from "@turf/line-split";
-import { length as turfLength } from "@turf/length";
-import { booleanIntersects } from "@turf/boolean-intersects";
+import { length } from "@turf/length";
 import RBush from "rbush";
-import { min, max, median, mean, sum } from "d3-array";
 
 /**
  * @function linestogrid
- * @description Assigns lines to a grid and computes statistics per cell.
- *              Supports weighted lengths or simple counts.
+ * @description Assign lines to a grid and compute weighted sums per cell.
+ *              Uses a spatial index to speed up calculations.
+ *              Optimized and removes cells with count = 0.
+ *              Supports multiple variables in varField (string or array of strings)
+ *              Treats undefined or NaN as zero when summing
+ *              If `values` is true, stores an array of intersected line properties
  * @param {object} opts
+ * @property {object} [lines] - GeoJSON lines to assign
  * @property {object} [grid] - GeoJSON grid
- * @property {object} [lines] - GeoJSON lines (LineString or MultiLineString)
- * @property {string} [var] - Field for weighting length (optional)
- * @property {boolean} [values=false] - Include array of raw values/IDs
- * @property {boolean} [sum=true] - Compute sum of weighted lengths
- * @property {boolean} [median=false] - Compute median
- * @property {boolean} [min=false] - Compute minimum
- * @property {boolean} [max=false] - Compute maximum
- * @property {boolean} [mean=false] - Compute mean
+ * @property {string|Array} [var] - Field(s) to compute weighted sums (optional)
+ * @property {boolean} [values=false] - Include array of raw lines properties
  */
 export function linestogrid(opts = {}) {
   const {
     grid,
     lines,
+    grid_id = "index",
     var: varField,
     values: includeValues = false,
-    sum: calcSum = true,
-    median: calcMedian = false,
-    min: calcMin = false,
-    max: calcMax = false,
-    mean: calcMean = false,
   } = opts;
 
   const t0 = performance.now();
-  const gridFeatures = grid.features;
-  const lineFeatures = lines.features;
-  const hasVar = varField !== undefined &amp;&amp; varField !== null;
 
-  const gridbyindex = new Map(gridFeatures.map((d, i) => [i, d]));
+  // --- Normalize varField to array ---
+  const varFields = varField
+    ? Array.isArray(varField)
+      ? varField
+      : [varField]
+    : [];
 
-  // ---- 1. Spatial index RBush ----
+  // --- 1. Compute total lengths for lines and initialize grid cells ---
+  for (const line of lines.features) {
+    line.properties.length_total = length(line, { units: "meters" });
+  }
+
+  for (const cell of grid.features) {
+    cell.properties.count = 0;
+    for (const v of varFields) {
+      cell.properties[v] = 0;
+    }
+    if (includeValues) cell.properties.values = [];
+  }
+
+  // --- 2. Build spatial index (RBush) on the grid ---
   const tree = new RBush();
-  const items = gridFeatures.map((g, i) => {
-    const [minX, minY, maxX, maxY] = bbox(g);
-    return { minX, minY, maxX, maxY, i };
+  const items = grid.features.map((cell) => {
+    const [minX, minY, maxX, maxY] = bbox(cell);
+    return { minX, minY, maxX, maxY, cell };
   });
   tree.load(items);
 
-  // ---- 2. Prepare stats storage per cell ----
-  const gridStats = new Map();
-  gridFeatures.forEach((g, i) => {
-    gridStats.set(i, { countSet: new Set(), valuesList: [], numericList: [] });
-  });
-
-  // ---- 3. Loop over lines ----
-  lineFeatures.forEach((line, i) => {
-    const totalLen = turfLength(line);
-    if (totalLen === 0) return;
-
-    const val = hasVar ? parseFloat(line.properties?.[varField]) || 0 : 1;
+  // --- 3. Loop over lines ---
+  for (const line of lines.features) {
     const [minX, minY, maxX, maxY] = bbox(line);
     const candidates = tree.search({ minX, minY, maxX, maxY });
 
     for (const cand of candidates) {
-      const g = gridbyindex.get(cand.i);
-      if (!booleanIntersects(g, line)) continue;
+      const cell = cand.cell;
 
-      const split = lineSplit(line, g);
-      if (!split || split.features.length === 0) continue;
+      // split line by cell polygon
+      const splitLines = lineSplit(line, cell);
+      if (!splitLines.features.length) continue;
 
-      let lenInside = 0;
-      split.features.forEach((seg) => {
-        const segLen = turfLength(seg);
-        if (segLen > 0 &amp;&amp; booleanIntersects(g, seg)) {
-          lenInside += segLen;
-        }
-      });
+      // compute total length of segments inside the cell
+      let totalSegLength = 0;
+      for (const seg of splitLines.features) {
+        totalSegLength += length(seg, { units: "meters" });
+      }
+      if (totalSegLength === 0) continue;
 
-      if (lenInside > 0) {
-        const stats = gridStats.get(cand.i);
-        stats.countSet.add(i); // unique line IDs
+      // --- update cell statistics ---
+      cell.properties.count += 1; // one line per cell
 
-        if (includeValues)
-          stats.valuesList.push(hasVar ? line.properties[varField] : i);
+      for (const v of varFields) {
+        const value = parseFloat(line.properties[v]);
+        cell.properties[v] += !isNaN(value)
+          ? value * (totalSegLength / line.properties.length_total)
+          : 0;
+      }
 
-        if (hasVar) stats.numericList.push(val * (lenInside / totalLen));
+      if (includeValues) {
+        cell.properties.values.push({ ...line.properties });
       }
     }
-  });
+  }
 
-  // ---- 4. Build final GeoJSON ----
-  const result = {
-    type: "FeatureCollection",
-    features: gridFeatures
-      .map((g, i) => {
-        const stats = gridStats.get(i);
-        const numericValues = stats.numericList;
-        const values = stats.valuesList;
-        const count = stats.countSet.size;
-
-        if (count === 0) return null;
-
-        const cellProps = { count };
-
-        if (hasVar &amp;&amp; numericValues.length > 0) {
-          if (calcSum) cellProps.sum = sum(numericValues);
-          if (calcMean) cellProps.mean = mean(numericValues);
-          if (calcMedian) cellProps.median = median(numericValues);
-          if (calcMin) cellProps.min = min(numericValues);
-          if (calcMax) cellProps.max = max(numericValues);
-        }
-
-        if (includeValues) cellProps.values = values;
-
-        return {
-          type: g.type,
-          properties: { ...g.properties, ...cellProps },
-          geometry: g.geometry,
-        };
-      })
-      .filter((f) => f !== null),
+  // --- 4. Filter out cells with count == 0 ---
+  const filteredGrid = {
+    ...grid,
+    features: grid.features.filter((cell) => cell.properties.count > 0),
   };
 
   const t1 = performance.now();
-  console.log(`Execution time: ${(t1 - t0).toFixed(2)} ms`);
-  return result;
+  console.log(
+    `Line intersection completed for ${filteredGrid.features.length} cells — ${(
+      t1 - t0
+    ).toFixed(2)} ms`
+  );
+
+  return filteredGrid;
 }
 </code></pre>
         </article>
@@ -171,7 +150,7 @@ export function linestogrid(opts = {}) {
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Mon Oct 20 2025 15:30:24 GMT+0200 (Central European Summer Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Tue Oct 21 2025 12:01:36 GMT+0200 (Central European Summer Time)
 </footer>
 
 <script> prettyPrint(); </script>

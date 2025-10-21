@@ -29,43 +29,35 @@
             <pre class="prettyprint source linenums"><code>import RBush from "rbush";
 import { bbox } from "@turf/bbox";
 import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
-import { min, max, median, mean, sum } from "d3-array";
 
 /**
  * @function pointstogrid
- * @description Assigns points to grid cells and computes statistics per cell.
+ * @description Assigns points to grid cells and computes sums per cell.
+ *              Supports multiple variables and stores point properties if values=true
  * @param {object} opts
  * @property {object} [points] - GeoJSON points
  * @property {object} [grid] - GeoJSON grid (polygons)
- * @property {string} [var] - Field for weighting points (optional)
- * @property {boolean} [values=false] - Include array of raw values/IDs
- * @property {boolean} [sum=true] - Compute sum
- * @property {boolean} [median=false] - Compute median
- * @property {boolean} [min=false] - Compute minimum
- * @property {boolean} [max=false] - Compute maximum
- * @property {boolean} [mean=false] - Compute mean
+ * @property {string|Array} [var] - Field(s) for summing values
+ * @property {boolean} [values=false] - Include array of raw point properties
  */
 export function pointstogrid(opts = {}) {
-  const {
-    points,
-    grid,
-    var: varField,
-    values: includeValues = false,
-    sum: calcSum = true,
-    median: calcMedian = false,
-    min: calcMin = false,
-    max: calcMax = false,
-    mean: calcMean = false,
-  } = opts;
+  const { points, grid, var: varField, values: includeValues = false } = opts;
 
   const t0 = performance.now();
+
   const gridFeatures = grid.features;
   const pointFeatures = points.features;
-  const hasVar = varField !== undefined &amp;&amp; varField !== null;
+
+  // --- Normalize varField to array ---
+  const varFields = varField
+    ? Array.isArray(varField)
+      ? varField
+      : [varField]
+    : [];
 
   const gridbyindex = new Map(gridFeatures.map((d, i) => [i, d]));
 
-  // ---- 1. Spatial index for polygons ----
+  // --- 1. Spatial index for polygons ---
   const tree = new RBush();
   const items = gridFeatures.map((g, i) => {
     const [minX, minY, maxX, maxY] = bbox(g);
@@ -73,13 +65,14 @@ export function pointstogrid(opts = {}) {
   });
   tree.load(items);
 
-  // ---- 2. Prepare stats storage per cell ----
+  // --- 2. Prepare stats storage per cell ---
   const gridStats = new Map();
   gridFeatures.forEach((g, i) => {
-    gridStats.set(i, { countSet: new Set(), valuesList: [], numericList: [] });
+    gridStats.set(i, { countSet: new Set(), valuesList: [], numericLists: {} });
+    varFields.forEach((v) => (gridStats.get(i).numericLists[v] = []));
   });
 
-  // ---- 3. Loop over points ----
+  // --- 3. Loop over points ---
   pointFeatures.forEach((pt, i) => {
     const x = pt.geometry.coordinates[0];
     const y = pt.geometry.coordinates[1];
@@ -93,38 +86,40 @@ export function pointstogrid(opts = {}) {
       const stats = gridStats.get(cand.i);
       stats.countSet.add(i);
 
-      const val = hasVar ? pt.properties[varField] : 1;
+      // --- handle numeric variables ---
+      varFields.forEach((v) => {
+        const val = parseFloat(pt.properties[v]);
+        if (!isNaN(val)) stats.numericLists[v].push(val);
+      });
 
-      if (includeValues)
-        stats.valuesList.push(hasVar ? pt.properties[varField] : i);
-      if (hasVar) stats.numericList.push(parseFloat(val) || 0);
+      // --- handle values option ---
+      if (includeValues) stats.valuesList.push({ ...pt.properties });
+
       break; // point counted once per cell
     }
   });
 
-  // ---- 4. Build final GeoJSON ----
+  // --- 4. Build final GeoJSON ---
   const result = {
     type: "FeatureCollection",
     features: gridFeatures
       .map((g, i) => {
         const stats = gridStats.get(i);
-        const numericValues = stats.numericList;
-        const values = stats.valuesList;
         const count = stats.countSet.size;
-
         if (count === 0) return null;
 
         const cellProps = { count };
 
-        if (hasVar &amp;&amp; numericValues.length > 0) {
-          if (calcSum) cellProps.sum = sum(numericValues);
-          if (calcMean) cellProps.mean = mean(numericValues);
-          if (calcMedian) cellProps.median = median(numericValues);
-          if (calcMin) cellProps.min = min(numericValues);
-          if (calcMax) cellProps.max = max(numericValues);
-        }
+        // sum each variable
+        varFields.forEach((v) => {
+          const numericValues = stats.numericLists[v];
+          cellProps[v] =
+            numericValues.length > 0
+              ? numericValues.reduce((a, b) => a + b, 0)
+              : 0;
+        });
 
-        if (includeValues) cellProps.values = values;
+        if (includeValues) cellProps.values = stats.valuesList;
 
         return {
           type: g.type,
@@ -137,6 +132,7 @@ export function pointstogrid(opts = {}) {
 
   const t1 = performance.now();
   console.log(`Execution time: ${(t1 - t0).toFixed(2)} ms`);
+
   return result;
 }
 </code></pre>
@@ -155,7 +151,7 @@ export function pointstogrid(opts = {}) {
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Mon Oct 20 2025 15:30:24 GMT+0200 (Central European Summer Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Tue Oct 21 2025 12:01:36 GMT+0200 (Central European Summer Time)
 </footer>
 
 <script> prettyPrint(); </script>

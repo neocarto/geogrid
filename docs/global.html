@@ -1714,6 +1714,328 @@
     
 
     
+    <p class="summary">Assign lines to a grid and compute weighted sums per cell.</p>
+    
+
+
+
+<div class="description">
+    <p>Assign lines to a grid and compute weighted sums per cell.
+Uses a spatial index to speed up calculations.
+Optimized and removes cells with count = 0.
+Supports multiple variables in varField (string or array of strings)
+Treats undefined or NaN as zero when summing
+If <code>values</code> is true, stores an array of intersected line properties</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>opts</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>lines</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>GeoJSON lines to assign</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>grid</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>GeoJSON grid</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>var</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+|
+
+<span class="param-type">Array</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>Field(s) to compute weighted sums (optional)</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>values</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    false
+                
+                </td>
+            
+
+            <td class="description last"><p>Include array of raw lines properties</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="operator_linestogrid.js.html">operator/linestogrid.js</a>, <a href="operator_linestogrid.js.html#line6">line 6</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="linestogrid"><span class="type-signature"></span>linestogrid<span class="signature">(opts)</span><span class="type-signature"></span></h4>
+    
+
+    
     <p class="summary">Assigns lines to a grid and computes statistics per cell.</p>
     
 
@@ -1954,191 +2276,6 @@ Supports weighted lengths or simple counts.</p>
         </tr>
 
     
-
-        <tr>
-            
-                <td class="name"><code>sum</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    true
-                
-                </td>
-            
-
-            <td class="description last"><p>Compute sum of weighted lengths</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>median</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    false
-                
-                </td>
-            
-
-            <td class="description last"><p>Compute median</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>min</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    false
-                
-                </td>
-            
-
-            <td class="description last"><p>Compute minimum</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>max</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    false
-                
-                </td>
-            
-
-            <td class="description last"><p>Compute maximum</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>mean</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    false
-                
-                </td>
-            
-
-            <td class="description last"><p>Compute mean</p></td>
-        </tr>
-
-    
     </tbody>
 </table>
 
@@ -2174,7 +2311,7 @@ Supports weighted lengths or simple counts.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="operator_linestogrid.js.html">operator/linestogrid.js</a>, <a href="operator_linestogrid.js.html#line8">line 8</a>
+        <a href="operator_linestogrid_save.js.html">operator/linestogrid_save.js</a>, <a href="operator_linestogrid_save.js.html#line8">line 8</a>
     </li></ul></dd>
     
 
@@ -2214,13 +2351,14 @@ Supports weighted lengths or simple counts.</p>
     
 
     
-    <p class="summary">Assigns points to grid cells and computes statistics per cell.</p>
+    <p class="summary">Assigns points to grid cells and computes sums per cell.</p>
     
 
 
 
 <div class="description">
-    <p>Assigns points to grid cells and computes statistics per cell.</p>
+    <p>Assigns points to grid cells and computes sums per cell.
+Supports multiple variables and stores point properties if values=true</p>
 </div>
 
 
@@ -2391,6 +2529,9 @@ Supports weighted lengths or simple counts.</p>
             
                 
 <span class="param-type">string</span>
+|
+
+<span class="param-type">Array</span>
 
 
             
@@ -2412,7 +2553,7 @@ Supports weighted lengths or simple counts.</p>
                 </td>
             
 
-            <td class="description last"><p>Field for weighting points (optional)</p></td>
+            <td class="description last"><p>Field(s) for summing values</p></td>
         </tr>
 
     
@@ -2449,192 +2590,7 @@ Supports weighted lengths or simple counts.</p>
                 </td>
             
 
-            <td class="description last"><p>Include array of raw values/IDs</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>sum</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    true
-                
-                </td>
-            
-
-            <td class="description last"><p>Compute sum</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>median</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    false
-                
-                </td>
-            
-
-            <td class="description last"><p>Compute median</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>min</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    false
-                
-                </td>
-            
-
-            <td class="description last"><p>Compute minimum</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>max</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    false
-                
-                </td>
-            
-
-            <td class="description last"><p>Compute maximum</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>mean</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    false
-                
-                </td>
-            
-
-            <td class="description last"><p>Compute mean</p></td>
+            <td class="description last"><p>Include array of raw point properties</p></td>
         </tr>
 
     
@@ -2673,7 +2629,329 @@ Supports weighted lengths or simple counts.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="operator_pointstogrid.js.html">operator/pointstogrid.js</a>, <a href="operator_pointstogrid.js.html#line6">line 6</a>
+        <a href="operator_pointstogrid.js.html">operator/pointstogrid.js</a>, <a href="operator_pointstogrid.js.html#line5">line 5</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="polygonstogrid"><span class="type-signature"></span>polygonstogrid<span class="signature">(opts)</span><span class="type-signature"></span></h4>
+    
+
+    
+    <p class="summary">Assign polygons to a grid and compute weighted sums per cell.</p>
+    
+
+
+
+<div class="description">
+    <p>Assign polygons to a grid and compute weighted sums per cell.
+Uses a spatial index to speed up calculations
+Optimized and removes cells with count = 0
+Supports multiple variables in varField (string or array of strings)
+Treats undefined or NaN as zero when summing
+If <code>values</code> is true, stores an array of intersected polygon properties</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>opts</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>polygons</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>GeoJSON polygons or multi polygons to assign</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>grid</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>GeoJSON grid</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>var</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+|
+
+<span class="param-type">Array</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>Field(s) ton compute weighted sums (optional)</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>values</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    false
+                
+                </td>
+            
+
+            <td class="description last"><p>Include array of raw polygons properties</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="operator_polygonstogrid.js.html">operator/polygonstogrid.js</a>, <a href="operator_polygonstogrid.js.html#line6">line 6</a>
     </li></ul></dd>
     
 
@@ -3173,7 +3451,7 @@ Optimized and removes cells with count = 0</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="operator_polygonstogrid.js.html">operator/polygonstogrid.js</a>, <a href="operator_polygonstogrid.js.html#line8">line 8</a>
+        <a href="operator_polygonstogrid_save.js.html">operator/polygonstogrid_save.js</a>, <a href="operator_polygonstogrid_save.js.html#line8">line 8</a>
     </li></ul></dd>
     
 
@@ -4371,7 +4649,7 @@ const projected = geoproject(world, { projection: geoOrthographic() });</code></
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Mon Oct 20 2025 15:30:25 GMT+0200 (Central European Summer Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Tue Oct 21 2025 12:01:36 GMT+0200 (Central European Summer Time)
 </footer>
 
 <script> prettyPrint(); </script>
