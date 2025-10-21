@@ -1,0 +1,124 @@
+import { bbox } from "@turf/bbox";
+import { lineSplit } from "@turf/line-split";
+import { length as turfLength } from "@turf/length";
+import { booleanIntersects } from "@turf/boolean-intersects";
+import RBush from "rbush";
+import { min, max, median, mean, sum } from "d3-array";
+
+/**
+ * @function linestogrid
+ * @description Assigns lines to a grid and computes statistics per cell.
+ *              Supports weighted lengths or simple counts.
+ * @param {object} opts
+ * @property {object} [grid] - GeoJSON grid
+ * @property {object} [lines] - GeoJSON lines (LineString or MultiLineString)
+ * @property {string} [var] - Field for weighting length (optional)
+ * @property {boolean} [values=false] - Include array of raw values/IDs
+ */
+export function linestogrid(opts = {}) {
+  const {
+    grid,
+    lines,
+    var: varField,
+    values: includeValues = false,
+    sum: calcSum = true,
+    median: calcMedian = false,
+    min: calcMin = false,
+    max: calcMax = false,
+    mean: calcMean = false,
+  } = opts;
+
+  const t0 = performance.now();
+  const gridFeatures = grid.features;
+  const lineFeatures = lines.features;
+  const hasVar = varField !== undefined && varField !== null;
+
+  const gridbyindex = new Map(gridFeatures.map((d, i) => [i, d]));
+
+  // ---- 1. Spatial index RBush ----
+  const tree = new RBush();
+  const items = gridFeatures.map((g, i) => {
+    const [minX, minY, maxX, maxY] = bbox(g);
+    return { minX, minY, maxX, maxY, i };
+  });
+  tree.load(items);
+
+  // ---- 2. Prepare stats storage per cell ----
+  const gridStats = new Map();
+  gridFeatures.forEach((g, i) => {
+    gridStats.set(i, { countSet: new Set(), valuesList: [], numericList: [] });
+  });
+
+  // ---- 3. Loop over lines ----
+  lineFeatures.forEach((line, i) => {
+    const totalLen = turfLength(line);
+    if (totalLen === 0) return;
+
+    const val = hasVar ? parseFloat(line.properties?.[varField]) || 0 : 1;
+    const [minX, minY, maxX, maxY] = bbox(line);
+    const candidates = tree.search({ minX, minY, maxX, maxY });
+
+    for (const cand of candidates) {
+      const g = gridbyindex.get(cand.i);
+      if (!booleanIntersects(g, line)) continue;
+
+      const split = lineSplit(line, g);
+      if (!split || split.features.length === 0) continue;
+
+      let lenInside = 0;
+      split.features.forEach((seg) => {
+        const segLen = turfLength(seg);
+        if (segLen > 0 && booleanIntersects(g, seg)) {
+          lenInside += segLen;
+        }
+      });
+
+      if (lenInside > 0) {
+        const stats = gridStats.get(cand.i);
+        stats.countSet.add(i); // unique line IDs
+
+        if (includeValues)
+          stats.valuesList.push(hasVar ? line.properties[varField] : i);
+
+        if (hasVar) stats.numericList.push(val * (lenInside / totalLen));
+      }
+    }
+  });
+
+  // ---- 4. Build final GeoJSON ----
+  const result = {
+    type: "FeatureCollection",
+    features: gridFeatures
+      .map((g, i) => {
+        const stats = gridStats.get(i);
+        const numericValues = stats.numericList;
+        const values = stats.valuesList;
+        const count = stats.countSet.size;
+
+        if (count === 0) return null;
+
+        const cellProps = { count };
+
+        if (hasVar && numericValues.length > 0) {
+          if (calcSum) cellProps.sum = sum(numericValues);
+          if (calcMean) cellProps.mean = mean(numericValues);
+          if (calcMedian) cellProps.median = median(numericValues);
+          if (calcMin) cellProps.min = min(numericValues);
+          if (calcMax) cellProps.max = max(numericValues);
+        }
+
+        if (includeValues) cellProps.values = values;
+
+        return {
+          type: g.type,
+          properties: { ...g.properties, ...cellProps },
+          geometry: g.geometry,
+        };
+      })
+      .filter((f) => f !== null),
+  };
+
+  const t1 = performance.now();
+  console.log(`Execution time: ${(t1 - t0).toFixed(2)} ms`);
+  return result;
+}
