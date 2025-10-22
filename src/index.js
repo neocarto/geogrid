@@ -6,6 +6,7 @@ export { diamond } from "./grid/diamond.js";
 export { hexbin } from "./grid/hexbin.js";
 export { h3 } from "./grid/h3.js";
 export { pointstogrid } from "./operator/pointstogrid.js";
+export { pointstogrid2 } from "./operator/pointstogrid2.js";
 export { polygonstogrid } from "./operator/polygonstogrid.js";
 export { linestogrid } from "./operator/linestogrid.js";
 export { project } from "./helpers/project.js";
