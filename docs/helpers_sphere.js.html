@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Source: helpers/project.js</title>
+    <title>JSDoc: Source: helpers/sphere.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Source: helpers/project.js</h1>
+    <h1 class="page-title">Source: helpers/sphere.js</h1>
 
     
 
@@ -26,42 +26,46 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import { geoPath } from "d3-geo";
+            <pre class="prettyprint source linenums"><code>import { polygon, featureCollection } from "@turf/helpers";
 
 /**
- * @function project
- * @description Projects a GeoJSON FeatureCollection using a D3 projection.
- * @param {object} data - GeoJSON FeatureCollection
- * @param {object} options
- * @property {function} options.projection - D3 projection function (e.g., d3.geoOrthographic(), d3.geoMercator())
- * @returns {object} - new GeoJSON FeatureCollection with projected coordinates
- *
- * @example
- * import { geoOrthographic } from "d3-geo-projection";
- * const projected = geoproject(world, { projection: geoOrthographic() });
+ * Crée un polygone approximatif de la sphère projetée dans le plan SVG
+ * et le retourne dans une FeatureCollection
+ * @param {d3.GeoProjection} projection - La projection D3 utilisée pour le SVG
+ * @param {number} [stepDeg=5] - Pas en degrés pour approximer la sphère
+ * @returns {GeoJSON.FeatureCollection} - FeatureCollection contenant le polygone Turf de la sphère projetée
  */
-export function project(data, { projection = null } = {}) {
-  if (!projection) return data; // if no projection, return original
+export function sphere(projection, stepDeg = 5) {
+  const coords = [];
 
-  function projectCoords(coords) {
-    if (typeof coords[0] === "number") {
-      // [lon, lat] => [x, y]
-      return projection(coords);
-    } else {
-      // Array of coordinates (nested for LineString, Polygon, MultiPolygon)
-      return coords.map(projectCoords);
-    }
+  // contour supérieur (latitude 90°)
+  for (let lon = -180; lon &lt;= 180; lon += stepDeg) {
+    const pt = projection([lon, 90]);
+    if (pt) coords.push(pt);
   }
 
-  const projectedFeatures = data.features.map((feat) => ({
-    ...feat,
-    geometry: {
-      ...feat.geometry,
-      coordinates: projectCoords(feat.geometry.coordinates),
-    },
-  }));
+  // contour droit (longitude 180°)
+  for (let lat = 90; lat >= -90; lat -= stepDeg) {
+    const pt = projection([180, lat]);
+    if (pt) coords.push(pt);
+  }
 
-  return { ...data, features: projectedFeatures };
+  // contour inférieur (latitude -90°)
+  for (let lon = 180; lon >= -180; lon -= stepDeg) {
+    const pt = projection([lon, -90]);
+    if (pt) coords.push(pt);
+  }
+
+  // contour gauche (longitude -180°)
+  for (let lat = -90; lat &lt;= 90; lat += stepDeg) {
+    const pt = projection([-180, lat]);
+    if (pt) coords.push(pt);
+  }
+
+  const poly = polygon([coords]);
+
+  // Retourner une FeatureCollection pour être compatible avec Turf intersect
+  return featureCollection([poly]);
 }
 </code></pre>
         </article>

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Source: helpers/project.js</title>
+    <title>JSDoc: Source: helpers/unstitch.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Source: helpers/project.js</h1>
+    <h1 class="page-title">Source: helpers/unstitch.js</h1>
 
     
 
@@ -26,42 +26,36 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import { geoPath } from "d3-geo";
+            <pre class="prettyprint source linenums"><code>import { geoProject } from "d3-geo-projection";
+import { rewind } from "geotoolbox";
+import { geoEquirectangular } from "d3-geo";
 
 /**
- * @function project
- * @description Projects a GeoJSON FeatureCollection using a D3 projection.
- * @param {object} data - GeoJSON FeatureCollection
- * @param {object} options
- * @property {function} options.projection - D3 projection function (e.g., d3.geoOrthographic(), d3.geoMercator())
- * @returns {object} - new GeoJSON FeatureCollection with projected coordinates
- *
- * @example
- * import { geoOrthographic } from "d3-geo-projection";
- * const projected = geoproject(world, { projection: geoOrthographic() });
+ * @function unstitch
+ * @description After Matthieu Viry: https://observablehq.com/@mthh/unstitch
  */
-export function project(data, { projection = null } = {}) {
-  if (!projection) return data; // if no projection, return original
 
-  function projectCoords(coords) {
-    if (typeof coords[0] === "number") {
-      // [lon, lat] => [x, y]
-      return projection(coords);
-    } else {
-      // Array of coordinates (nested for LineString, Polygon, MultiPolygon)
-      return coords.map(projectCoords);
-    }
+export function unstitch(a) {
+  a = JSON.parse(JSON.stringify(a));
+  a = geoProject(
+    a,
+    geoEquirectangular()
+      .scale(180 / Math.PI)
+      .translate([0, 0])
+  );
+
+  for (const f of a.features) {
+    if (f.geometry.type === "Polygon")
+      f.geometry.coordinates.forEach((ring) =>
+        ring.forEach((point) => (point[1] *= -1))
+      );
+    else if (f.geometry.type === "MultiPolygon")
+      f.geometry.coordinates.forEach((poly) =>
+        poly.forEach((ring) => ring.forEach((point) => (point[1] *= -1)))
+      );
   }
 
-  const projectedFeatures = data.features.map((feat) => ({
-    ...feat,
-    geometry: {
-      ...feat.geometry,
-      coordinates: projectCoords(feat.geometry.coordinates),
-    },
-  }));
-
-  return { ...data, features: projectedFeatures };
+  return rewind(a, { simple: true });
 }
 </code></pre>
         </article>

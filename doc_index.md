@@ -62,6 +62,7 @@ geogrid = require("geogrid");
 **Globe grids**
 
 - [**`h3`**](global.html#h3) - The function create a [h3-js](https://github.com/uber/h3-js) global grid.
+- [**`square_sph**](global.html#square_sph) - The function create a regular square global grid.
 
 **Operators**
 

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: helpers/stitchmerge.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: helpers/stitchmerge.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Takes a GeoJSON and processes each MultiPolygon feature that
+ * crosses the antimeridian, converting it into a continuous Polygon feature.
+ */
+export function stitchmerge(geojson) {
+  // Helper: adjust longitude relative to previous one to handle wrapping around ±180°
+  function adjustLonToPrev(lon, prevLon) {
+    if (prevLon === null || prevLon === undefined) return lon;
+    // Normalize angular difference to be within [-180, 180]
+    while (lon - prevLon > 180) lon -= 360;
+    while (prevLon - lon > 180) lon += 360;
+    return lon;
+  }
+
+  // Helper: remove consecutive duplicate points (with a small tolerance)
+  function dedupeConsecutive(points) {
+    const out = [];
+    for (let i = 0; i &lt; points.length; i++) {
+      const p = points[i];
+      const prev = out.length ? out[out.length - 1] : null;
+      if (
+        !prev ||
+        Math.abs(prev[0] - p[0]) > 1e-12 ||
+        Math.abs(prev[1] - p[1]) > 1e-12
+      ) {
+        out.push(p);
+      }
+    }
+    return out;
+  }
+
+  // Helper: ensure the ring is closed (first == last point)
+  function closeRing(ring) {
+    if (!ring.length) return ring;
+    const first = ring[0];
+    const last = ring[ring.length - 1];
+    if (
+      Math.abs(first[0] - last[0]) > 1e-12 ||
+      Math.abs(first[1] - last[1]) > 1e-12
+    ) {
+      ring.push([first[0], first[1]]);
+    }
+    return ring;
+  }
+
+  // Process one MultiPolygon geometry -> returns a merged Polygon geometry
+  function processMultiPolygonGeometry(multiCoords) {
+    // multiCoords: Array of polygons; each polygon is an array of rings.
+    // We treat the outer ring (index 0) of each polygon as a possible fragment
+    // of a single continuous outer ring that needs to be reconnected.
+    // Additional rings (holes) are collected and preserved as holes.
+    const exteriorRings = [];
+    const interiorRings = [];
+
+    for (let p = 0; p &lt; multiCoords.length; p++) {
+      const polygon = multiCoords[p];
+      if (!polygon || !polygon.length) continue;
+      // polygon[0] is the exterior ring
+      exteriorRings.push(polygon[0].slice());
+      // if polygon has holes, collect them
+      for (let r = 1; r &lt; polygon.length; r++) {
+        interiorRings.push(polygon[r].slice());
+      }
+    }
+
+    // Unwrap all exterior rings so that longitudes are continuous
+    const unwrappedExteriors = [];
+    let prevLon = null;
+    for (let i = 0; i &lt; exteriorRings.length; i++) {
+      const ring = exteriorRings[i];
+      const newRing = [];
+      for (let j = 0; j &lt; ring.length; j++) {
+        let [lon, lat] = ring[j];
+        lon = adjustLonToPrev(lon, prevLon);
+        newRing.push([lon, lat]);
+        prevLon = lon;
+      }
+      const trimmed = dedupeConsecutive(newRing);
+      unwrappedExteriors.push(trimmed);
+    }
+
+    // Merge all unwrapped exterior rings into a single continuous ring
+    // We remove internal closures and only close at the end
+    let mergedExterior = [];
+    for (let i = 0; i &lt; unwrappedExteriors.length; i++) {
+      const ring = unwrappedExteriors[i].slice();
+      // remove last point if it's equal to the first (closed ring)
+      if (ring.length > 1) {
+        const f = ring[0];
+        const l = ring[ring.length - 1];
+        if (Math.abs(f[0] - l[0]) &lt; 1e-12 &amp;&amp; Math.abs(f[1] - l[1]) &lt; 1e-12) {
+          ring.pop();
+        }
+      }
+      mergedExterior = mergedExterior.concat(ring);
+    }
+
+    // Deduplicate consecutive identical points
+    mergedExterior = dedupeConsecutive(mergedExterior);
+    // Close the final merged ring
+    mergedExterior = closeRing(mergedExterior);
+
+    // Unwrap interior rings (holes) so they match the unwrapped longitude system
+    const unwrappedInteriors = interiorRings.map((ring) => {
+      const out = [];
+      for (let i = 0; i &lt; ring.length; i++) {
+        const anchorLon = mergedExterior.length ? mergedExterior[0][0] : null;
+        let lon = ring[i][0];
+        if (anchorLon !== null) {
+          while (lon - anchorLon > 180) lon -= 360;
+          while (anchorLon - lon > 180) lon += 360;
+        }
+        out.push([lon, ring[i][1]]);
+      }
+      return closeRing(dedupeConsecutive(out));
+    });
+
+    // Return a single Polygon geometry: outer + holes
+    const coords = [mergedExterior].concat(unwrappedInteriors);
+    return { type: "Polygon", coordinates: coords };
+  }
+
+  // MAIN: process all features
+  const out = {
+    ...geojson,
+    features: (geojson.features || []).map((feature) => {
+      if (!feature || !feature.geometry) return feature;
+      const geom = feature.geometry;
+      if (geom.type === "MultiPolygon") {
+        try {
+          const newGeom = processMultiPolygonGeometry(geom.coordinates);
+          return { ...feature, geometry: newGeom };
+        } catch (e) {
+          console.warn("Error stitching a MultiPolygon:", e);
+          return feature; // fallback to original geometry
+        }
+      }
+      // Leave other geometries unchanged
+      return feature;
+    }),
+  };
+
+  return out;
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#diamond">diamond</a></li><li><a href="global.html#dot">dot</a></li><li><a href="global.html#h3">h3</a></li><li><a href="global.html#hexbin">hexbin</a></li><li><a href="global.html#linestogrid">linestogrid</a></li><li><a href="global.html#pointstogrid">pointstogrid</a></li><li><a href="global.html#polygonstogrid">polygonstogrid</a></li><li><a href="global.html#project">project</a></li><li><a href="global.html#sphere">sphere</a></li><li><a href="global.html#square">square</a></li><li><a href="global.html#square_sph">square_sph</a></li><li><a href="global.html#stitchmerge">stitchmerge</a></li><li><a href="global.html#triangle">triangle</a></li><li><a href="global.html#unstitch">unstitch</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Thu Oct 23 2025 16:40:30 GMT+0200 (Central European Summer Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
