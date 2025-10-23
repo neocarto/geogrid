@@ -1,6 +1,8 @@
 import { bbox } from "@turf/bbox";
 import { lineSplit } from "@turf/line-split";
 import { length } from "@turf/length";
+import { stitchmerge } from "../helpers/stitchmerge.js";
+import { unstitch } from "../helpers/unstitch.js";
 import RBush from "rbush";
 
 /**
@@ -18,15 +20,20 @@ import RBush from "rbush";
  * @property {boolean} [values=false] - Include array of raw lines properties
  */
 export function linestogrid(opts = {}) {
-  const {
+  let {
     grid,
     lines,
-    grid_id = "index",
     var: varField,
     values: includeValues = false,
+    spherical = false,
   } = opts;
 
   const t0 = performance.now();
+
+  // Unstitch grids if needed
+  if (spherical) {
+    grid = unstitch(grid);
+  }
 
   // --- Normalize varField to array ---
   const varFields = varField
@@ -104,5 +111,5 @@ export function linestogrid(opts = {}) {
     ).toFixed(2)} ms`
   );
 
-  return filteredGrid;
+  return spherical ? stitchmerge(filteredGrid) : filteredGrid;
 }

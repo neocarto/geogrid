@@ -1,6 +1,8 @@
 import RBush from "rbush";
 import { bbox } from "@turf/bbox";
 import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
+import { stitchmerge } from "../helpers/stitchmerge.js";
+import { unstitch } from "../helpers/unstitch.js";
 
 /**
  * @function pointstogrid
@@ -11,11 +13,22 @@ import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
  * @property {object} [grid] - GeoJSON grid (polygons)
  * @property {string|Array} [var] - Field(s) for summing values
  * @property {boolean} [values=false] - Include array of raw point properties
+ * @property {boolean} [spherical=false] - Use true if you use a spherical coordinate system
  */
 export function pointstogrid(opts = {}) {
-  const { points, grid, var: varField, values: includeValues = false } = opts;
+  let {
+    points,
+    grid,
+    var: varField,
+    values: includeValues = false,
+    spherical = false,
+  } = opts;
 
   const t0 = performance.now();
+
+  if (spherical) {
+    grid = unstitch(grid);
+  }
 
   const gridFeatures = grid.features;
   const pointFeatures = points.features;
@@ -105,5 +118,5 @@ export function pointstogrid(opts = {}) {
   const t1 = performance.now();
   console.log(`Execution time: ${(t1 - t0).toFixed(2)} ms`);
 
-  return result;
+  return spherical ? stitchmerge(result) : result;
 }
