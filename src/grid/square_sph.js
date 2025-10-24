@@ -1,93 +1,90 @@
-import { createSteppedArray } from "../helpers/createSteppedArray.js";
 import booleanIntersects from "@turf/boolean-intersects";
 
 /**
  * @function square_sph
- * @summary Compute a square grid in WGS84 degrees.
- * @description Builds a square grid in latitude/longitude degrees,
- * avoids coordinates exactly at ±180 or ±90 to prevent rewind issues.
+ * @summary Build a global square grid in lon/lat.
+ * @description
+ * Generates a grid of square polygons covering the whole globe in WGS84 coordinates.
+ * - Longitudes: start at -180, add `step` until reaching +180 (last cell may be smaller)
+ * - Latitudes: start at +90, subtract `step` until reaching -90 (last cell may be smaller)
+ * - Cells never overlap; borders align exactly
+ * - EPS is used to avoid coordinates exactly at ±180 and ±90 to prevent rewind/topology issues
+ *
  * @param {object} options
- * @param {number[]} [options.start=[-180, -90]] - Starting coordinates [lon, lat].
- * @param {number} [options.width=360] - Width of the grid in degrees (longitude span).
- * @param {number} [options.height=180] - Height of the grid in degrees (latitude span).
- * @param {number} [options.step=1] - Step size in degrees.
- * @param {GeoJSON.Feature|GeoJSON.FeatureCollection|GeoJSON.Geometry} [options.domain] -
- *   Optional GeoJSON object. Only cells that intersect this domain are kept.
- * @returns {GeoJSON.FeatureCollection} A GeoJSON FeatureCollection of polygons.
+ * @param {number} [options.step=1] - Grid cell size in degrees
+ * @param {GeoJSON} [options.domain=null] - Optional GeoJSON mask; only intersecting cells are kept
+ * @returns {GeoJSON.FeatureCollection} A FeatureCollection of square polygons
  */
-export function square_sph({
-  start = [-180, -90],
-  width = 360,
-  height = 180,
-  step = 1,
-  domain = null,
-} = {}) {
+export function square_sph({ step = 1, domain = null } = {}) {
   const LON_MIN = -180;
   const LON_MAX = 180;
   const LAT_MIN = -90;
   const LAT_MAX = 90;
-  const EPS = 1e-2; // petit décalage pour éviter ±180 et ±90 exacts
+  const EPS = 1e-2; // small offset to avoid exact ±180/±90 coordinates
 
-  const lonStart = Math.max(LON_MIN, start[0]);
-  const latStart = Math.max(LAT_MIN, start[1]);
-  const lonEnd = Math.min(LON_MAX, start[0] + width);
-  const latEnd = Math.min(LAT_MAX, start[1] + height);
-
-  let x = createSteppedArray(lonStart + step / 2, lonEnd - step / 2, step);
-  let y = createSteppedArray(
-    latStart + step / 2,
-    latEnd - step / 2,
-    step,
-    true
-  );
+  if (step <= 0) throw new Error("step must be > 0");
 
   const features = [];
-  let i = 0;
+  let index = 0;
 
-  for (const lon of x) {
-    for (const lat of y) {
-      // coins initiaux
-      let lonWest = lon - step / 2;
-      let lonEast = lon + step / 2;
-      let latSouth = lat - step / 2;
-      let latNorth = lat + step / 2;
+  // --- Longitudes: from -180 (west) to +180 (east), incrementing by step ---
+  let lonWest = LON_MIN;
+  while (lonWest < LON_MAX - 1e-12) {
+    let lonEast = lonWest + step;
+    if (lonEast > LON_MAX) lonEast = LON_MAX;
 
-      // remplacer ±180 et ±90 par des valeurs légèrement inférieures/supérieures
-      if (lonWest <= LON_MIN) lonWest = LON_MIN + EPS;
-      if (lonEast >= LON_MAX) lonEast = LON_MAX - EPS;
-      if (latSouth <= LAT_MIN) latSouth = LAT_MIN + EPS;
-      if (latNorth >= LAT_MAX) latNorth = LAT_MAX - EPS;
+    // Apply EPS to avoid exact ±180
+    const lonW = Math.max(lonWest, LON_MIN + EPS);
+    const lonE = Math.min(lonEast, LON_MAX - EPS);
 
-      features.push({
-        type: "Feature",
-        geometry: {
-          type: "Polygon",
-          coordinates: [
-            [
-              [lonWest, latNorth],
-              [lonEast, latNorth],
-              [lonEast, latSouth],
-              [lonWest, latSouth],
-              [lonWest, latNorth],
+    // --- Latitudes: from +90 (north) to -90 (south), decrementing by step ---
+    let latNorth = LAT_MAX;
+    while (latNorth > LAT_MIN + 1e-12) {
+      let latSouth = latNorth - step;
+      if (latSouth < LAT_MIN) latSouth = LAT_MIN;
+
+      // Apply EPS to avoid exact ±90
+      const latN = Math.min(latNorth, LAT_MAX - EPS);
+      const latS = Math.max(latSouth, LAT_MIN + EPS);
+
+      // Skip degenerate cells (can happen with EPS near poles)
+      if (lonE - lonW > 1e-12 && latN - latS > 1e-12) {
+        features.push({
+          type: "Feature",
+          geometry: {
+            type: "Polygon",
+            coordinates: [
+              [
+                [lonW, latN],
+                [lonE, latN],
+                [lonE, latS],
+                [lonW, latS],
+                [lonW, latN],
+              ],
             ],
-          ],
-        },
-        properties: { index: i++ },
-      });
+          },
+          properties: { index: index++ },
+        });
+      }
+
+      // Move to the next row (southward)
+      latNorth = latSouth;
     }
+
+    // Move to the next column (eastward)
+    lonWest = lonEast;
   }
 
-  // Domain
-  let filtered = features;
-  if (domain) {
-    filtered = features.filter((f) => {
-      try {
-        return booleanIntersects(f, domain);
-      } catch {
-        return false;
-      }
-    });
-  }
+  // --- Optional filtering by domain ---
+  const filtered = domain
+    ? features.filter((f) => {
+        try {
+          return booleanIntersects(f, domain);
+        } catch {
+          return false;
+        }
+      })
+    : features;
 
   return {
     type: "FeatureCollection",
