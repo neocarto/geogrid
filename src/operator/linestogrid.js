@@ -7,17 +7,12 @@ import RBush from "rbush";
 
 /**
  * @function linestogrid
- * @description Assign lines to a grid and compute weighted sums per cell.
+ * @description Assign lines (LineString or MultiLineString) to a grid and compute weighted sums per cell.
  *              Uses a spatial index to speed up calculations.
  *              Optimized and removes cells with count = 0.
- *              Supports multiple variables in varField (string or array of strings)
- *              Treats undefined or NaN as zero when summing
- *              If `values` is true, stores an array of intersected line properties
- * @param {object} opts
- * @property {object} [lines] - GeoJSON lines to assign
- * @property {object} [grid] - GeoJSON grid
- * @property {string|Array} [var] - Field(s) to compute weighted sums (optional)
- * @property {boolean} [values=false] - Include array of raw lines properties
+ *              Supports multiple variables in varField (string or array of strings).
+ *              Treats undefined or NaN as zero when summing.
+ *              If `values` is true, stores an array of intersected line properties.
  */
 export function linestogrid(opts = {}) {
   let {
@@ -30,7 +25,7 @@ export function linestogrid(opts = {}) {
 
   const t0 = performance.now();
 
-  // Unstitch grids if needed
+  // --- Unstitch grid if spherical
   if (spherical) {
     grid = unstitch(grid);
   }
@@ -42,20 +37,35 @@ export function linestogrid(opts = {}) {
       : [varField]
     : [];
 
-  // --- 1. Compute total lengths for lines and initialize grid cells ---
-  for (const line of lines.features) {
+  // --- Flatten MultiLineString features into LineStrings ---
+  const flatLines = [];
+  for (const feature of lines.features) {
+    if (feature.geometry.type === "LineString") {
+      flatLines.push(feature);
+    } else if (feature.geometry.type === "MultiLineString") {
+      for (const coords of feature.geometry.coordinates) {
+        flatLines.push({
+          type: "Feature",
+          geometry: { type: "LineString", coordinates: coords },
+          properties: { ...feature.properties },
+        });
+      }
+    }
+  }
+
+  // --- Compute total lengths for each line ---
+  for (const line of flatLines) {
     line.properties.length_total = length(line, { units: "meters" });
   }
 
+  // --- Initialize grid cells ---
   for (const cell of grid.features) {
     cell.properties.count = 0;
-    for (const v of varFields) {
-      cell.properties[v] = 0;
-    }
+    for (const v of varFields) cell.properties[v] = 0;
     if (includeValues) cell.properties.values = [];
   }
 
-  // --- 2. Build spatial index (RBush) on the grid ---
+  // --- Build spatial index (RBush) on the grid ---
   const tree = new RBush();
   const items = grid.features.map((cell) => {
     const [minX, minY, maxX, maxY] = bbox(cell);
@@ -63,27 +73,31 @@ export function linestogrid(opts = {}) {
   });
   tree.load(items);
 
-  // --- 3. Loop over lines ---
-  for (const line of lines.features) {
+  // --- Process all (flattened) lines ---
+  for (const line of flatLines) {
     const [minX, minY, maxX, maxY] = bbox(line);
     const candidates = tree.search({ minX, minY, maxX, maxY });
 
     for (const cand of candidates) {
       const cell = cand.cell;
 
-      // split line by cell polygon
-      const splitLines = lineSplit(line, cell);
+      let splitLines;
+      try {
+        splitLines = lineSplit(line, cell);
+      } catch {
+        // skip problematic geometries (rare)
+        continue;
+      }
+
       if (!splitLines.features.length) continue;
 
-      // compute total length of segments inside the cell
       let totalSegLength = 0;
       for (const seg of splitLines.features) {
         totalSegLength += length(seg, { units: "meters" });
       }
       if (totalSegLength === 0) continue;
 
-      // --- update cell statistics ---
-      cell.properties.count += 1; // one line per cell
+      cell.properties.count += 1;
 
       for (const v of varFields) {
         const value = parseFloat(line.properties[v]);
@@ -98,7 +112,7 @@ export function linestogrid(opts = {}) {
     }
   }
 
-  // --- 4. Filter out cells with count == 0 ---
+  // --- Filter out empty cells ---
   const filteredGrid = {
     ...grid,
     features: grid.features.filter((cell) => cell.properties.count > 0),

@@ -58,11 +58,12 @@ geogrid = require("geogrid");
 - [**`random`**](global.html#random) - The function create a random grid.
 - [**`square`**](global.html#square) - The function create a regular square grid.
 - [**`triangle`**](global.html#triangle) - The function create a regular triangle grid.
+- [**`diamond`**](global.html#diamond) - The function create a regular diamond grid.
 
 **Globe grids**
 
 - [**`h3`**](global.html#h3) - The function create a [h3-js](https://github.com/uber/h3-js) global grid.
-- [**`square_sph**](global.html#square_sph) - The function create a regular square global grid.
+- [**square_sph**](global.html#square_sph) - The function create a regular square global grid.
 
 **Operators**
 
