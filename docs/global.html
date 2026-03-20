@@ -1710,22 +1710,18 @@
     
 
     
-    <h4 class="name" id="linestogrid"><span class="type-signature"></span>linestogrid<span class="signature">(opts)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="linestogrid"><span class="type-signature"></span>linestogrid<span class="signature">()</span><span class="type-signature"></span></h4>
     
 
     
-    <p class="summary">Assign lines to a grid and compute weighted sums per cell.</p>
+    <p class="summary">Assign lines (LineString or MultiLineString) to a grid and compute weighted sums per cell.</p>
     
 
 
 
 <div class="description">
-    <p>Assign lines to a grid and compute weighted sums per cell.
-Uses a spatial index to speed up calculations.
-Optimized and removes cells with count = 0.
-Supports multiple variables in varField (string or array of strings)
-Treats undefined or NaN as zero when summing
-If <code>values</code> is true, stores an array of intersected line properties</p>
+    <p>Assign lines (LineString or MultiLineString) to a grid and compute weighted sums per cell.
+MultiLineStrings are treated as a single feature for count and proportional distribution.</p>
 </div>
 
 
@@ -1736,233 +1732,6 @@ If <code>values</code> is true, stores an array of intersected line properties</
 
 
 
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>opts</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">object</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-    <h5 class="subsection-title">Properties:</h5>
-
-    
-
-<table class="props">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Attributes</th>
-        
-
-        
-        <th>Default</th>
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>lines</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">object</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last"><p>GeoJSON lines to assign</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>grid</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">object</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last"><p>GeoJSON grid</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>var</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-|
-
-<span class="param-type">Array</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last"><p>Field(s) to compute weighted sums (optional)</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>values</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    false
-                
-                </td>
-            
-
-            <td class="description last"><p>Include array of raw lines properties</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
 
 
 
@@ -1996,7 +1765,7 @@ If <code>values</code> is true, stores an array of intersected line properties</
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="operator_linestogrid.js.html">operator/linestogrid.js</a>, <a href="operator_linestogrid.js.html#line8">line 8</a>
+        <a href="operator_linestogrid.js.html">operator/linestogrid.js</a>, <a href="operator_linestogrid.js.html#line9">line 9</a>
     </li></ul></dd>
     
 
@@ -3204,6 +2973,98 @@ const projected = geoproject(world, { projection: geoOrthographic() });</code></
     
 
     
+    <h4 class="name" id="safeSegLength"><span class="type-signature"></span>safeSegLength<span class="signature">()</span><span class="type-signature"></span></h4>
+    
+
+    
+    <p class="summary"><p>Returns total segment length of intersection between a line and polygon cell,
+including case where line is entirely contained in the cell.</p></p>
+    
+
+
+
+<div class="description">
+    <p>Returns total segment length of intersection between a line and polygon cell,
+including case where line is entirely contained in the cell.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="operator_linestogrid.js.html">operator/linestogrid.js</a>, <a href="operator_linestogrid.js.html#line147">line 147</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
     <h4 class="name" id="sphere"><span class="type-signature"></span>sphere<span class="signature">(projection, stepDeg<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {GeoJSON.FeatureCollection}</span></h4>
     
 
@@ -3772,14 +3633,19 @@ et le retourne dans une FeatureCollection</p>
     
 
     
-    <p class="summary"><p>Compute a square grid in WGS84 degrees.</p></p>
+    <p class="summary"><p>Build a global square grid in lon/lat.</p></p>
     
 
 
 
 <div class="description">
-    <p>Builds a square grid in latitude/longitude degrees,
-avoids coordinates exactly at ±180 or ±90 to prevent rewind issues.</p>
+    <p>Generates a grid of square polygons covering the whole globe in WGS84 coordinates.</p>
+<ul>
+<li>Longitudes: start at -180, add <code>step</code> until reaching +180 (last cell may be smaller)</li>
+<li>Latitudes: start at +90, subtract <code>step</code> until reaching -90 (last cell may be smaller)</li>
+<li>Cells never overlap; borders align exactly</li>
+<li>EPS is used to avoid coordinates exactly at ±180 and ±90 to prevent rewind/topology issues</li>
+</ul>
 </div>
 
 
@@ -3861,123 +3727,6 @@ avoids coordinates exactly at ±180 or ±90 to prevent rewind issues.</p>
 
         <tr>
             
-                <td class="name"><code>start</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Array.&lt;number></span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    [-180, -90]
-                
-                </td>
-            
-
-            <td class="description last"><p>Starting coordinates [lon, lat].</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>width</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    360
-                
-                </td>
-            
-
-            <td class="description last"><p>Width of the grid in degrees (longitude span).</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>height</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    180
-                
-                </td>
-            
-
-            <td class="description last"><p>Height of the grid in degrees (latitude span).</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
                 <td class="name"><code>step</code></td>
             
 
@@ -4010,7 +3759,7 @@ avoids coordinates exactly at ±180 or ±90 to prevent rewind issues.</p>
                 </td>
             
 
-            <td class="description last"><p>Step size in degrees.</p></td>
+            <td class="description last"><p>Grid cell size in degrees</p></td>
         </tr>
 
     
@@ -4023,13 +3772,7 @@ avoids coordinates exactly at ±180 or ±90 to prevent rewind issues.</p>
             <td class="type">
             
                 
-<span class="param-type">GeoJSON.Feature</span>
-|
-
-<span class="param-type">GeoJSON.FeatureCollection</span>
-|
-
-<span class="param-type">GeoJSON.Geometry</span>
+<span class="param-type">GeoJSON</span>
 
 
             
@@ -4050,10 +3793,12 @@ avoids coordinates exactly at ±180 or ±90 to prevent rewind issues.</p>
             
                 <td class="default">
                 
+                    null
+                
                 </td>
             
 
-            <td class="description last"><p>Optional GeoJSON object. Only cells that intersect this domain are kept.</p></td>
+            <td class="description last"><p>Optional GeoJSON mask; only intersecting cells are kept</p></td>
         </tr>
 
     
@@ -4101,7 +3846,7 @@ avoids coordinates exactly at ±180 or ±90 to prevent rewind issues.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="grid_square_sph.js.html">grid/square_sph.js</a>, <a href="grid_square_sph.js.html#line4">line 4</a>
+        <a href="grid_square_sph.js.html">grid/square_sph.js</a>, <a href="grid_square_sph.js.html#line3">line 3</a>
     </li></ul></dd>
     
 
@@ -4130,7 +3875,7 @@ avoids coordinates exactly at ±180 or ±90 to prevent rewind issues.</p>
 
         
 <div class="param-desc">
-    <p>A GeoJSON FeatureCollection of polygons.</p>
+    <p>A FeatureCollection of square polygons</p>
 </div>
 
 
@@ -4695,13 +4440,13 @@ crosses the antimeridian, converting it into a continuous Polygon feature.</p>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#diamond">diamond</a></li><li><a href="global.html#dot">dot</a></li><li><a href="global.html#h3">h3</a></li><li><a href="global.html#hexbin">hexbin</a></li><li><a href="global.html#linestogrid">linestogrid</a></li><li><a href="global.html#pointstogrid">pointstogrid</a></li><li><a href="global.html#polygonstogrid">polygonstogrid</a></li><li><a href="global.html#project">project</a></li><li><a href="global.html#sphere">sphere</a></li><li><a href="global.html#square">square</a></li><li><a href="global.html#square_sph">square_sph</a></li><li><a href="global.html#stitchmerge">stitchmerge</a></li><li><a href="global.html#triangle">triangle</a></li><li><a href="global.html#unstitch">unstitch</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#diamond">diamond</a></li><li><a href="global.html#dot">dot</a></li><li><a href="global.html#h3">h3</a></li><li><a href="global.html#hexbin">hexbin</a></li><li><a href="global.html#linestogrid">linestogrid</a></li><li><a href="global.html#pointstogrid">pointstogrid</a></li><li><a href="global.html#polygonstogrid">polygonstogrid</a></li><li><a href="global.html#project">project</a></li><li><a href="global.html#safeSegLength">safeSegLength</a></li><li><a href="global.html#sphere">sphere</a></li><li><a href="global.html#square">square</a></li><li><a href="global.html#square_sph">square_sph</a></li><li><a href="global.html#stitchmerge">stitchmerge</a></li><li><a href="global.html#triangle">triangle</a></li><li><a href="global.html#unstitch">unstitch</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Fri Oct 24 2025 11:44:24 GMT+0200 (Central European Summer Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Fri Mar 20 2026 09:37:27 GMT+0100 (Central European Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>
